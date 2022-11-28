@@ -20,7 +20,7 @@ makedocs(
     modules = [HS3],
     format = Documenter.HTML(
         prettyurls = !("local" in ARGS),
-        canonical = "https://oschulz.github.io/HS3.jl/stable/"
+        canonical = "https://RobinPelkner.github.io/HS3.jl/stable/"
     ),
     pages = [
         "Home" => "index.md",
@@ -33,7 +33,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/oschulz/HS3.jl.git",
+    repo = "github.com/RobinPelkner/HS3.jl.git",
     forcepush = true,
     push_preview = true,
 )
