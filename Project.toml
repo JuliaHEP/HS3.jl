@@ -1,0 +1,4 @@
+name = "HS3"
+uuid = "1289e8aa-dbc6-44e2-854b-b7901d93ac07"
+authors = ["Robin Pelkner <robin.pelkner@tu-dortmund.de> "]
+version = "0.1.0"
