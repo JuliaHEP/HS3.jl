@@ -8,7 +8,7 @@ Template for Julia packages.
 
 module HS3
 import JSON3, PropDicts, Distributions, ValueShapes, StatsBase, DensityInterface, LiteHF, Parameters
-
+import NamedTupleTools
 abstract type AbstractHS3Spec end
 
 include("BuiltinDist.jl")
@@ -20,8 +20,10 @@ include("BuiltinFunctions.jl")
 include("MetaInformation.jl")
 include("BuiltinData.jl")
 include("TopologicalSort.jl")
+include("BuiltinHistFact.jl")
 include("BuiltinLikelihood.jl")
 include("BuiltinAnalyses.jl")
 include("Validator.jl")
+
 #include("BuiltinOutput.jl")
 end # module

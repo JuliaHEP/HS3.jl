@@ -1,0 +1,74 @@
+{
+    "type" : "object",
+    "properties" : {
+        "metadata" : {
+            "type" : "object",
+            "properties" : { 
+                "hs3_version" : {
+                    "type" : "number",
+                    "const" : 0.2
+                },
+                "packages" : {
+                    "type" : "array",
+                    "items": {
+                        "type": "object",
+                        "properties" : {
+                            "name" : {
+                                "type" : "string"
+                                }, 
+                            "version" : {
+                                "type" : "string"
+                                }
+                            },
+                        "additionalProperties": false
+                        }
+                    },
+                "authors" : {
+                    "type" : "array" ,
+                    "items" : {
+                        "type" : "string"
+                        }
+                    },
+                "publications" : {
+                    "type" : "array",
+                    "items": {
+                        "type" : "string"
+                        }
+                    },
+                "description" : {
+                    "type" : "string"
+                    }
+                },
+            "required" : ["hs3_version"],
+            "additionalProperties": false
+        },
+        "misc" : {
+            "type" : "object"
+        },
+        "parameter_points" : {
+            "type" : "array",
+            "items" : {
+                "type" : "object",
+                "properties":{
+                    "name" : {
+                        "type" : "string"
+                        },
+                    "parameters" : {
+                        "type" : "array",
+                        "items": {
+                            "type" : "object",
+                            "properties" : {
+                                "name" : {"type" : "string"},
+                                "value" : {"type" : "number"},
+                                "const" : {"enum" : [0, 1, false, true]}
+                                },
+                            "required" : ["name", "value"] 
+                            }
+                        }
+                    }
+                }
+            }
+    },
+    "required" : ["metadata"],
+    "additionalProperties": false
+}

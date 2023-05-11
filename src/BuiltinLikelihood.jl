@@ -1,36 +1,38 @@
-function generate_likelihood(dist, data::StatsBase.Histogram, params)
-    #for  i in 1:length(bin_centers)
-    #    bin_centers[i] = bin_centers[i] - 0.5
-    #end    
+function generate_likelihood(dist, data::StatsBase.Histogram)  
     bin_edges = data.edges[1]
     bin_edges_left = bin_edges[1:end-1]
     bin_edges_right = bin_edges[2:end]
     bin_widths = bin_edges_right - bin_edges_left
     bin_centers = (bin_edges_right + bin_edges_left) / 2 
-    lpdf = 0.0
-    idx = eachindex(data.weights)
-    for  i in 1:length(data.weights)
-         #bin_centers[i] = round(bin_centers[i],  digits=0) 
-         expected_counts = bin_widths[i] * Distributions.pdf(dist(params), bin_centers[i])
-         #println(bin_centers)
-         lpdf += Distributions.logpdf(Distributions.Poisson(expected_counts), data.weights[i])
+    #idx = eachindex(data.weights)
+ 
+    ll = function (params)
+        lpdf = 0.0
+        for i in 1:length(data.weights)
+            lpdf += Distributions.logpdf(Distributions.Poisson(bin_widths[i] * Distributions.pdf(dist(params), bin_centers[i])), data.weights[i])
+        end
+        return lpdf
     end
-    #lpdf = Distributions.logpdf(dist(params), data.weights)
-     return lpdf
+    return params -> ll(params)
 end
 export generate_likelihood
 
-function generate_likelihood(dist, params)
+function generate_likelihood(dist)
 ## return likelihood for distributions with implied data, as used for aux_disitributions 
     if isa(dist.inner.a, HS3.DistributionSpec{:gaussian_dist})
-        return logpdf(dist(params), 0)
+        return begin params -> logpdf(dist(params), 0) end
     elseif isa(dist.inner.a, HS3.DistributionSpec{:poisson_dist})
-        return logpdf(dist(params), 1)
+        return  begin params -> logpdf(dist(params), 1) end
     elseif isa(dist.inner.a, HS3.DistributionSpec{:lognormal_dist})
-        return logpdf(dist(params), 1)
+        return begin params -> logpdf(dist(params), 1) end
     else
-        @warn "Specified auxiliary distribution is not associated with implied data"
+        @warn "Specified auxiliary distribution $dist is not associated with implied data"
     end
+end
+
+function generate_likelihood(dist::HistfactPDF, data::StatsBase.Histogram)  
+    lpdf = LiteHF.pyhf_logjointof(dist.channel[1], data.weights, dist.prior)
+    return  params -> lpdf([convert(Float64, params[x]) for x in keys(dist.prior)])
 end
 
 
@@ -61,23 +63,48 @@ export make_likelihood_specs
 function make_likelihood(likelihood_spec::AbstractLikelihoodSpec, functional_specs::NamedTuple, data_specs::NamedTuple)
     generated_dist = []
     generated_data = []
-    expected_counts = []
+    #functional_specs_without_histfact = NamedTupleTools.namedtuple(filter((x) -> (typeof(x[2]) != HistFactorySpec), NamedTupleTools.convert(Dict, functional_specs)))
+    
+    #histfacts = NamedTupleTools.namedtuple(filter((x) -> (typeof(x[2]) == HistFactorySpec), NamedTupleTools.convert(Dict, functional_specs)))
+
+    #println(functional_specs_without_histfact)
+
+    ### sorting
     sorted_specs = topological_sort(functional_specs)
-    for i in 1:length(likelihood_spec.distributions)
-        generated_dist = push!(generated_dist, make_functional(functional_specs[Symbol(likelihood_spec.distributions[i])], sorted_specs))
-        generated_data = push!(generated_data, make_data(data_specs[Symbol(likelihood_spec.data[i])]))
-    end
-    println("was ", generated_dist, " was")
-    DensityInterface.logfuncdensity(function (params)
-        ll = 0.0
+    println("sorted: ", sorted_specs)
+    ### making disitrbtions
+    if !isempty(sorted_specs)
         for i in 1:length(likelihood_spec.distributions)
-            ll += generate_likelihood(generated_dist[i], generated_data[i], params)
-        end
-        if likelihood_spec.aux_distributions !== nothing
-            for aux in likelihood_spec.aux_distributions
-                ll += generate_likelihood(functional_specs[Symbol(aux)], params)
+            if typeof(functional_specs[Symbol(likelihood_spec.distributions[i])]) == HistFactorySpec
+                generated_dist = push!(generated_dist, make_histfact(functional_specs[Symbol(likelihood_spec.distributions[i])], Symbol(likelihood_spec.distributions[i])))
+            else
+                generated_dist = push!(generated_dist, make_functional(functional_specs[Symbol(likelihood_spec.distributions[i])], sorted_specs))
             end
+            generated_data = push!(generated_data, make_data(data_specs[Symbol(likelihood_spec.data[i])]))
         end
+    end
+    #generated_hist = make_histfact(functional_specs[1], keys(functional_specs)[1])
+    #println("Keys: ", keys(generated_hist.prior))
+    #generate the individual likelihood functions aka distribution-data pairs
+    likelihood_functions = []
+    for i in 1:length(generated_dist)
+        likelihood_functions = push!(likelihood_functions, generate_likelihood(generated_dist[i], generated_data[i]))
+    end
+    #histfact_ll = generate_likelihood(generated_hist, generated_data[1])
+    #return params -> begin BAT.LogDVal(histfact_ll(params)) end
+    return DensityInterface.logfuncdensity(
+        function(params)
+            ll = 0.0
+            #ll = (likelihood_functions[i](params) for i in 1:length(likelihood_spec.distributions))
+            for i in 1:length(likelihood_spec.distributions)
+                ll += likelihood_functions[i](params) 
+            end
+            #generate_likelihood(generated_hist, generated_data[1]) #for i in 1:length(likelihood_spec.distributions) 
+            #if likelihood_spec.aux_distributions !== nothing
+            #    for aux in likelihood_spec.aux_distributions
+            #        ll += generate_likelihood(functional_specs[Symbol(aux)])
+            #    end
+            #end
         return ll
     end)
 end

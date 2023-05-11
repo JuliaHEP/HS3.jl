@@ -1,0 +1,207 @@
+{
+    "distributions": [
+        {
+            "name": "sig1",
+            "mean": 0,
+            "sigma" : 1,
+            "type": "normal_dist",
+            "x": "x_1"
+        },
+        {
+            "name": "background",
+            "c": "gen",
+            "type": "exponential_dist",
+            "x": "x_1"
+        },
+        {
+            "name" : "model1",
+            "type" : "mixture_dist",
+            "summands" : [
+                "sig1",
+                "background"
+            ],
+            "coefficients" : [100, 200]
+        }
+    ],
+    "metadata": {
+        "hs3_version" : 0.2
+    },
+    "functions": [
+        {
+            "name" : "func1",
+            "type" : "sum",
+            "summands" : [
+                1,
+                2,
+                "test_abc"
+            ]
+        },
+        {
+            "name" : "test_abc",
+            "type" : "sum",
+            "summands" : [
+                1,
+                2,
+                4
+            ]
+        },
+        {
+            "expression": "func1 - 2*test_abc",
+            "type": "generic_function",
+            "name": "gen"
+        }
+    ],
+    "data": [
+        {
+	        "name" : "obsData",
+            "contents": [48, 37, 42, 41, 30, 27,
+            38, 32, 23, 33, 22, 18, 30, 30, 37,
+            32, 42, 28, 37, 39, 43, 34, 29, 33,
+            28, 20, 14, 7, 12, 15, 6, 8, 7, 10,
+            1, 9, 4, 7, 4, 4, 1, 1, 1, 1, 0, 0,
+            0, 3, 0, 2],
+            "axes": [
+                {
+                    "name" : "mes",
+                    "max": 10,
+                    "min": 0,
+                    "nbins": 50
+                }
+            ],
+            "uncertainty" : {
+                "type": "gaussian_uncertainty",
+                "sigma" : [48, 37, 42, 41, 30, 27,
+                38, 32, 23, 33, 22, 18, 30, 30, 37,
+                32, 42, 28, 37, 39, 43, 34, 29, 33,
+                28, 20, 14, 7, 12, 15, 6, 8, 7, 10,
+                1, 9, 4, 7, 4, 4, 1, 1, 1, 1, 0, 0,
+                0, 3, 0, 2],
+                "correlation" : 0
+            },
+            "type": "binned"
+        },
+        {
+            "name":"data1",
+            "type":"unbinned",
+            "weights":[
+            9.0,
+            18.4
+            ],
+            "entries":[
+            [1],
+            [2]
+            ],
+            "entries_errors":[
+            [0.3] ,
+            [0.6]
+            ],
+            "axes":[
+                {
+                "name":"variable1"
+                },
+                {
+                    "name":"variable2",
+                    "min":1,
+                    "max":3
+                }
+            ]
+        },
+        {
+            "name":"data2",
+            "type":"point",
+            "value": 0,
+            "error": 1
+        }
+    ],
+    "likelihoods": [  
+        {
+            "name" : "main_likelihood",
+            "distributions": [
+                "model1"
+            ],
+            "data": [
+                "obsData"
+            ]
+        },
+        {
+            "name" : "bkg_likelihood",
+            "distributions": [
+                "background", "sig1"
+            ],
+            "data": [
+                "obsData", "obsData"
+            ]
+        }
+    ],
+    "domains":[
+        {
+            "name" : "default_domain",
+            "type" : "product_domain",
+            "axes" : [
+                {
+                    "name" : "coef_sig",
+                    "max" : 100,
+                    "min" : 10
+                },
+                {
+                    "name" : "param_mean",
+                    "max" : 10,
+                    "min" : 0
+                }
+            ]
+        },
+        {
+            "name" : "alternative_domain",
+            "type" : "product_domain",
+            "axes" : [
+                {
+                    "name" : "coef_sig",
+                    "min" : 10, 
+                    "max" : 10
+                },
+                {
+                    "name" : "param_mean",
+                    "max" : 10,
+                    "min" : 0
+                }
+            ]
+        }
+    ],
+    "parameter_points":[
+        {
+            "name" : "starting_values",
+            "parameters": [
+                {
+                    "name" : "par_1",
+                    "value": 3
+                },
+                {
+                    "name" : "par_2",
+                    "value": 7,
+                    "const": 1
+                }
+            ]
+        },
+        {
+            "name" : "alternative_values",
+            "parameters": [
+                {
+                    "name" : "par_1",
+                    "value": 7
+                },
+                {
+                    "name" : "par_2",
+                    "value": 23.9,
+                    "const": false
+                }
+            ]
+        }
+    ],
+    "analyses" : [
+        {
+            "name" : "analysis1",
+            "likelihood" : "main_likelihood",
+            "parameter_domain" : "default_domain"
+        }
+    ]
+}

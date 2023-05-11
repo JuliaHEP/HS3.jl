@@ -13,8 +13,10 @@ end
 function make_axesspecs(axes_array::AbstractArray)
     nt = NamedTuple()
     for element in axes_array
-        temp = NamedTuple(filter(entry -> entry[1] != :name, element))
-        nt = merge(nt, (Symbol(element.name) => AxesSpec(; temp...),),)
+        print(_typed_content(element))
+        temp = NamedTupleTools.delete(_typed_content(element), :name)
+        print((element.name))
+        nt = merge(nt, ((Symbol(element.name)) => AxesSpec(; temp...),),)
     end
     return nt
 end

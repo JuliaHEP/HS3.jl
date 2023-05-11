@@ -1,0 +1,179 @@
+{
+    "observations": {
+        "obsData": {
+            "counts": [
+                122.0,
+                112.0
+            ],
+            "errors": [
+                11.045361017187261,
+                10.583005244258363
+            ],
+            "observables": {
+                "obs_x_channel1": {
+                    "max": 2.0,
+                    "min": 1.0,
+                    "nbins": 2
+                }
+            },
+            "index": "channelCat"
+        },
+        "background1_data": {
+            "counts": [
+                100.0,
+                0.0
+            ],
+            "errors": [
+                5.000000074505806,
+                0.0
+            ],
+            "observables": {
+                "obs_x_channel1": {
+                    "max": 2.0,
+                    "min": 1.0,
+                    "nbins": 2
+                }
+            }
+        },
+        "background2_data": {
+            "counts": [
+                0.0,
+                100.0
+            ],
+            "errors": [
+                0.0,
+                10.0
+            ],
+            "observables": {
+                "obs_x_channel1": {
+                    "max": 2.0,
+                    "min": 1.0,
+                    "nbins": 2
+                }
+            }
+        },
+        "signal_data": {
+            "counts": [
+                20.0,
+                10.0
+            ],
+            "errors": [
+                4.47213595499958,
+                3.1622776601683795
+            ],
+            "observables": {
+                "obs_x_channel1": {
+                    "max": 2.0,
+                    "min": 1.0,
+                    "nbins": 2
+                }
+            }
+        }
+
+    },
+    "likelihoods": {  
+        "main_likelihood": {
+            "dist": "channel1",
+            "obs": "obsData"
+        }
+    },
+    "distributions": {
+        "background1": {
+            "overallSystematics": {
+                "parameter": "syst2",
+                "high": 1.05,
+                "low": 0.95
+            },
+            #"statError": 1,
+            "type": "hist-sample"
+        },
+        "background2": {
+            "overallSystematics": {
+                    "parameter": "syst3",
+                    "high": 1.05,
+                    "low": 0.95
+            },
+            #"statError": 1,
+            "type": "hist-sample"
+        },
+        "signal": {
+            "normFactors": [
+                "mu"
+            ],
+            "overallSystematics": {
+                "parameter": "syst1", 
+                "high": 1.05,
+                "low": 0.95
+                
+            },
+            #"statError": 0,
+            "type": "hist-sample"
+        },
+        "channel1": {
+            "samples": [
+                "background1",
+                "background2",
+                "signal"
+            ],
+            "observables": [
+                "background1_data",
+                "background2_data",
+                "signal_data"
+            ],
+            "statError": {
+                "constraint": "Poisson",
+                "relThreshold": 0.01
+            },
+            "type": "histfactory"
+        },
+        "meas": {
+            "channels": [
+                "channel1"
+            ],
+            "index": "channelCat",
+            "type": "simultaneous"
+        }
+    },
+    "domains": {
+        "default_domain": {
+            "type": "product_domain",
+            "variables": [
+                {
+                    "const": 1,
+                    "name": "alpha_Lumi"
+                },
+                {
+                    "max": 5.0,
+                    "min": -5.0,
+                    "value": 0.0,
+                    "name": "alpha_syst1"
+                },
+                {
+                    "max": 5.0,
+                    "min": -5.0,
+                    "value": 0.0,
+                    "name": "alpha_syst2" 
+                },
+                {
+                    "max": 5.0,
+                    "min": -5.0,
+                    "value": 0.0,
+                    "name": "alpha_syst3"
+                },
+                {
+                    "max": 5.0,
+                    "min": -3.0,
+                    "value": 1.0,
+                    "name": "mu"
+                }
+            ]
+        }
+    },
+    "analyses": {
+        "primary_analysis":{
+            "likelihoods" : ["main_likelihood"],
+            "poi" : ["mu"],
+            "domains" : ["default_domain"]
+        }
+    }
+}

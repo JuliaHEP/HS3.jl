@@ -24,12 +24,15 @@ _typed_content(x::Number) = x
 
 _typed_content(A::AbstractArray{<:Number}) = A
 
-_typed_content(A::AbstractArray) = (_typed_content.(A)...,)
+_typed_content(A::AbstractArray) = [_typed_content.(A)...,]
 
 _typed_content(A::JSON3.Object) = _typed_content(Dict(A))
 
 _typed_content(A::PropDicts.PropDict) = _typed_content(Dict(A))
 
+_typed_content(::Nothing) = nothing
+
+_typed_content(A::NamedTuple) = A
 
 function generate_distspec(dict::AbstractDict) #TODO: Falscher Name
     tp = Val(Symbol(dict[:type]))
@@ -168,18 +171,38 @@ end
     b
 end
 
+#function make_functional(spec::AbstractFunctionalSpec, sorted_dists::Vector, level::Int64 = 0)
+#    functionals = []
+#    sorted_dists = filter((x) -> x[1] > level, sorted_dists)
+#    p = NamedTuple()
+#    for dist in sorted_dists 
+#        functionals = push!(functionals, make_functional(dist[2][2], sorted_dists, dist[1]))
+#    end
+#    p = merge(p, zip((first.(last.(sorted_dists))), functionals))
+#    println("asdsa", p)
+#    new_spec = make_functional(spec)
+#    println("here", new_spec)
+#    new_spec
+#    #return params -> begin      
+#    #    new_spec(merge(NamedTuple(params), p))
+#    #end 
+#end
 function make_functional(spec::AbstractFunctionalSpec, sorted_dists::Vector, level::Int64 = 0)
+    functionals = (;)
+    sorted_dists = filter((x) -> x[1] > level, sorted_dists)
+    for dist in reverse(sorted_dists) 
+        functionals = merge(functionals, (first(last(dist)) => make_functional(dist[2][2]), ))
+    end
+    dist = make_functional(spec)
     return params -> begin
-        functionals = []
-        sorted_dists = filter((x) -> x[1] > level, sorted_dists)
-        for dist in sorted_dists 
-            functionals = push!(functionals, make_functional(dist[2][2], sorted_dists, dist[1])(params))
+        for (k, v) in zip(keys(functionals), functionals)
+            (typeof(v) <: Distributions.Distribution) && break
+            functionals = merge(functionals, (k => v(merge(functionals, params)),))
         end
-        params = merge(params, zip((first.(last.(sorted_dists))), functionals))
-        new_spec = subst_vars(spec, params)
-        make_functional(new_spec)(params)
-    end 
+        dist(merge(functionals, params))
+    end
 end
+
 
 make_functional(spec::AbstractDistributionsSpec) = generate_distribution ∘ Base.Fix1(subst_vars, spec)
 #

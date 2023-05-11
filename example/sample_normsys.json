@@ -1,0 +1,65 @@
+{
+    "distributions" : 
+    [
+        {
+            "name": "mychannel",
+            "type" :"histfactory_dist",
+            "axes": [
+                {
+                    "name": "m"
+                }
+            ],
+            "samples": [
+                {
+                    "name": "signal_MC",
+                    "data": 
+                    {
+                        "contents" : [2,3,4,5]
+                    },
+                    "modifiers": [
+                        {
+                            "name": "mu",
+                            "type": "normfactor"
+                        }
+                    ]
+                },
+                {
+                    "name": "bkg_MC",
+                    "data": 
+                    {
+                        "contents" : [30,19,9,4]
+                    },
+                    "modifiers": [
+                        { 
+                            "name": "theta", 
+                            "type": "normsys", 
+                            "data": {
+                                "hi": 1.3, 
+                                "lo": 0.8
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "data": [
+        {
+            "name": "observations",
+            "contents": [34, 22, 13, 11],
+            "axes": [
+                {
+                    "name": "m"
+                }
+            ],
+            "type": "binned"
+        }
+    ], 
+    "likelihoods": [
+        {
+            "name" : "l1",
+            "distributions" : ["mychannel"],
+            "data" : ["observations"]
+        }
+    ]
+}

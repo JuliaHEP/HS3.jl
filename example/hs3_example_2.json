@@ -1,0 +1,278 @@
+{
+    "analyses": [
+        {
+            "name": "simPdf",
+            "domain": "default_domain",
+            "likelihood": "combined_channels",
+            "parameters_of_interest": [
+                "mean"
+            ]
+        }
+    ],
+    "distributions": [
+        {
+            "name": "bkg_1",
+            "c": "c_1",
+            "type": "exponential_dist",
+            "x": "x_1"
+        },
+        {
+            "name": "bkg_2",
+            "coefficients": [
+                "a_0",
+                "a_1",
+                "a_2"
+            ],
+            "type": "polynomial_dist",
+            "x": "x_2"
+        },
+        {
+            "name": "model_1",
+            "coefficients": [
+                "n_sig_1",
+                "nbkg_2"
+            ],
+            "summands": [
+                "sig_1",
+                "bkg_1"
+            ],
+            "type": "mixture_dist"
+        },
+        {
+            "name": "model_2",
+            "coefficients": [
+                "n_sig_2",
+                "nbkg_2"
+            ],
+            "summands": [
+                "sig_2",
+                "bkg_2"
+            ],
+            "type": "mixture_dist"
+        },
+        {
+            "name": "sig_1",
+            "mean": "mean",
+            "sigma": "sigma_1",
+            "type": "gaussian_dist",
+            "x": "x_1"
+        },
+        {
+            "name": "sig_2",
+            "alpha": "alpha",
+            "x": "x_2",
+            "m0": "mean",
+            "n": "ncb",
+            "sigma": "sigma_2",
+            "type": "CrystalBall_dist"
+        }
+    ],
+    "domains": [
+        {
+            "name": "default_domain",
+            "type": "product_domain",
+            "variables": [
+                {
+                    "max": 10000000,
+                    "min": 0,
+                    "name": "n_sig_2"
+                },
+                {
+                    "max": 10,
+                    "min": 0,
+                    "name": "mean"
+                },
+                {
+                    "max": 10,
+                    "min": 0.1,
+                    "name": "sigma_1"
+                },
+                {
+                    "max": -0.001,
+                    "min": -100,
+                    "name": "c_1"
+                },
+                {
+                    "max": 10000000,
+                    "min": 0,
+                    "name": "n_sig_1"
+                },
+                {
+                    "max": 10,
+                    "min": -10,
+                    "name": "a_0"
+                },
+                {
+                    "max": 10000000,
+                    "min": 0,
+                    "name": "nbkg_2"
+                },
+                {
+                    "max": 10,
+                    "min": 0.1,
+                    "name": "alpha"
+                },
+                {
+                    "max": 10,
+                    "min": 0.1,
+                    "name": "sigma_2"
+                },
+                {
+                    "max": 10,
+                    "min": 0.1,
+                    "name": "ncb"
+                },
+                {
+                    "max": 10,
+                    "min": -10,
+                    "name": "a_1"
+                },
+                {
+                    "max": 10,
+                    "min": -10,
+                    "name": "a_2"
+                }
+            ]
+        }
+    ],
+    "parameter_points": [
+        {
+            "name": "default_values",
+            "parameters": [
+                {
+                    "name": "a_0",
+                    "value": 3
+                },
+                {
+                    "name": "a_1",
+                    "value": -0.3
+                },
+                {
+                    "name": "a_2",
+                    "value": 0.01
+                },
+                {
+                    "name": "alpha",
+                    "value": 0.9
+                },
+                {
+                    "name": "c_1",
+                    "value": -0.2
+                },
+                {
+                    "name": "mean",
+                    "value": 5
+                },
+                {
+                    "name": "n_sig_1",
+                    "value": 10000
+                },
+                {
+                    "name": "n_sig_2",
+                    "value": 30000
+                },
+                {
+                    "name": "nbkg_2",
+                    "value": 100000
+                },
+                {
+                    "name": "ncb",
+                    "value": 1
+                },
+                {
+                    "name": "sigma_1",
+                    "value": 0.5
+                },
+                {
+                    "name": "sigma_2",
+                    "value": 0.8
+                }
+            ]
+        }
+    ],
+    "likelihoods": [
+        {
+            "name": "combined_channels",
+            "distributions": [
+                "model_1",
+                "model_2"
+            ],
+            "data": [
+                "obsData_channel_1",
+                "obsData_channel_2"
+            ]
+        }
+    ],
+    "metadata": {
+        "version": "0.2"
+    },
+    "data": [
+        {
+            "name": "obsData_channel_1",
+            "type": "binned",
+            "contents": [
+                10995,
+                10073,
+                8978,
+                8022,
+                7468,
+                6679,
+                6188,
+                5657,
+                6094,
+                7810,
+                7617,
+                5028,
+                3509,
+                3074,
+                2747,
+                2349,
+                2261,
+                1941,
+                1851,
+                1659
+            ],
+            "axes": [
+                {
+                    "name": "x_1",
+                    "max": 10,
+                    "min": 0,
+                    "nbins": 20
+                }
+            ]
+        },
+        {
+            "name": "obsData_channel_2",
+            "contents": [
+                8809,
+                8315,
+                8027,
+                7806,
+                7624,
+                7553,
+                7496,
+                7797,
+                8873,
+                10269,
+                9937,
+                8003,
+                5703,
+                4366,
+                3810,
+                3464,
+                3307,
+                3043,
+                3016,
+                2782
+            ],
+            "axes": [
+                {
+                    "name": "x_2",
+                    "max": 10,
+                    "min": 0,
+                    "nbins": 20
+                }
+            ]
+        }
+    ]
+}

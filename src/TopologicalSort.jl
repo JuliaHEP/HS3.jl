@@ -43,6 +43,8 @@ function topological_sort(specs::NamedTuple)
             node_array = push!(node_array, flatten((values(specs[key].params), values(specs[key].variables))))
         elseif typeof(specs[key]) <: AbstractFunctionsSpec
             node_array = push!(node_array, flatten((values(specs[key].params))))
+        elseif typeof(specs[key]) <: HistFactorySpec
+            node_array = push!(node_array, (;))
         else
             @error "Spec Type not supported"
         end

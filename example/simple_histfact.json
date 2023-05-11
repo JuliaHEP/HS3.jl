@@ -1,0 +1,71 @@
+{
+    "distributions": [
+        {
+            "name": "model_CombReco",
+            "type": "histfactory_dist",
+            "axes" :[ 
+                {
+                    "name" : "djlas"
+                }
+            ],
+            "samples": [
+                {
+                    "data": {
+                        "contents": [
+                            31.205480575561523,
+                            10.188735961914062,
+                            1.5401626825332642
+                        ]
+                    },
+                    "modifiers": [
+                        {
+                            "name": "ttW_Bin_001_mu",
+                            "type": "normfactor"
+                        },
+                        {
+                            "name": "Lumi",
+                            "type": "normfactor"
+                        },
+                        {
+                            "data": {
+                                "hi": 1.0,
+                                "lo": 1.0
+                            },
+                            "name": "Dummy",
+                            "type": "normsys"
+                        }
+                    ],
+                    "name": "ttW_CombReco_Truth_bin_1"
+                }, 
+                {
+                    "data": {
+                        "contents": [
+                            31.205480575561523,
+                            10.188735961914062,
+                            1.5401626825332642
+                        ]
+                    },
+                    "modifiers": [
+                        {
+                            "name": "ttW_Bin_001_mu",
+                            "type": "normfactor"
+                        },
+                        {
+                            "name": "Lumi",
+                            "type": "normfactor"
+                        },
+                        {
+                            "data": {
+                                "hi": 1.0,
+                                "lo": 1.0
+                            },
+                            "name": "Dummy",
+                            "type": "normsys"
+                        }
+                    ],
+                    "name": "ttW_CombReco_Truth_bin_2"
+                }
+            ]
+        }
+    ]
+}

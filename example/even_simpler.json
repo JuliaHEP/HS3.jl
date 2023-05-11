@@ -1,0 +1,99 @@
+{
+    "distributions": [  
+        {
+            "name" : "signal",
+            "type" : "gaussian_dist",
+            "mean" : "param_mean",
+            "sigma": "param_sigma",
+            "x" : "mes"
+        }
+    ],
+    "data": [
+        {
+	        "name" : "obsData",
+            "contents": [0, 1, 2, 7, 10, 10, 16, 35, 39, 47, 50, 75, 89, 66,
+             72, 77, 83, 76, 52, 44, 39, 32, 17, 24, 13, 8, 6, 3, 2, 2],
+            "axes": [
+                {
+                    "name" : "mes",
+                    "max": 2.5,
+                    "min": -0.5,
+                    "nbins": 30
+                }
+            ],
+            "type": "binned"
+        }
+    ],
+    "likelihoods": [  
+        {
+            "name" : "main_likelihood",
+            "distributions": [
+                "signal"
+            ],
+            "data": [
+                "obsData"
+            ]
+        },
+        {
+            "name" : "bkg_likelihood",
+            "distributions": [
+                "background"
+            ],
+            "data": [
+                "obsData"
+            ]
+        }
+    ],
+
+    "parameter_points":[
+        {
+            "name" : "starting_values",
+            "parameters" : [
+                {
+                    "name" : "coef_sig",
+                    "value" : 200000
+                },
+                {
+                    "name" : "coef_bkg",
+                    "value" : 800000
+                }
+            ]
+        }
+    ],
+    "domains":[
+        {
+            "name" : "default_domain",
+            "type" : "product_domain",
+            "axes" : [
+                {
+                    "name" : "param_mean",
+                    "max" : 2,
+                    "min" : 0
+                },
+                {
+                    "name" : "param_sigma",
+                    "max" : 1,
+                    "min" : 0.1
+                }
+            ]
+        } 
+    ],
+    "analyses": [
+        {
+            "name" : "primary_analysis",
+            "likelihood" : "main_likelihood",
+            "parameters_of_interest" : ["param_mean"],
+            "parameter_domain" : "default_domain",
+            "parameter_init" : "starting_values"
+        },
+        {
+            "name" : "background_analysis",
+            "likelihood" : "bkg_likelihood",
+            "parameters_of_interest" : ["param_c"],
+            "parameter_domain" : "default_domain"
+        }
+    ],
+    "metadata": {
+        "hs3_version": "0.2"
+    }
+}
