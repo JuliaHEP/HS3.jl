@@ -47,11 +47,11 @@
                     },
                     "modifiers": [
                         {
-                            "name": "ttW_Bin_001_mu",
+                            "name": "ttW_Bdsadin_001_mu",
                             "type": "normfactor"
                         },
                         {
-                            "name": "Lumi",
+                            "name": "Lumiasd",
                             "type": "normfactor"
                         },
                         {

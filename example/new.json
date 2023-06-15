@@ -1,0 +1,26 @@
+{
+    "distributions": [
+        {
+            "covariances": [
+                [
+                    0.25,
+                    0.0
+                ],
+                [
+                    0.0,
+                    0.25
+                ]
+            ],
+            "mean": [
+                0,
+                0
+            ],
+            "name": "regularization_ttW",
+            "type": "multinormal_dist",
+            "x": [
+                "mu_prime_1",
+                "mu_prime_2"
+            ]
+        }
+    ]
+}

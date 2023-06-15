@@ -1,14 +1,14 @@
 function file_to_dict(path::String)
-    f = open(path, "r")
-    data = read(f)
-    json_obj = JSON3.read(data)
-    PropDicts.PropDict(Dict(json_obj))
+    try
+        f = open(path, "r")
+        data = read(f)
+        json_obj = JSON3.read(data)
+        Dict(json_obj)
+    catch e
+        @error "Invalid JSON File"
+        throw(e)
+    end
 end
 
 export file_to_dict
 
-#function make_all_specs(dict::AbstractDict)
-#    
-#end
-#
-#export make_all_specs

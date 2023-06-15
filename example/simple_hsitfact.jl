@@ -9,13 +9,13 @@ ll_spec = HS3.generate_likelihoodspec(example_dict[:likelihoods][1])
 likelihood = HS3.make_likelihood(ll_spec, functional_specs, data_specs)
 
 using DensityInterface
-logdensityof(likelihood, (mu = 200., theta=7, ))
+@btime logdensityof(likelihood, (theta = .1, mu = 1., ))
 using BAT
 using LiteHF, Distributions
-a = HS3.make_histfact(functional_specs[2], :mychannel)
+a = HS3.make_histfact(functional_specs[1], :mychannel)
 a.channel[1]
-shape = NamedTupleShape(mu = ScalarShape{Real}(), theta = ScalarShape{Real}())
-prior = [LiteHF.FlatPrior(0, 5), Normal()]
+shape = NamedTupleShape(theta = ScalarShape{Real}(), mu = ScalarShape{Real}())
+prior = [Normal(), LiteHF.FlatPrior(0, 5)]
 prior_dist = product_distribution(prior)
 p= shape(prior_dist)
 prior = NamedTupleDist(
@@ -33,12 +33,13 @@ dump(l)
 Distributions.quantile(d::LiteHF.FlatPrior, p::Float64) = d.a + p * (d.b - d.a)
 Distributions.params(d::LiteHF.FlatPrior) = (d.a, d.b)
 
-
+a = LiteHF.RelaxedPoisson(1.)
+logpdf(a, 123213.321)
 
 pydict = LiteHF.load_pyhfjson("./example/sample_normsys_lite.json")
 pyhfmodel = build_pyhf(pydict)
 LL = pyhf_logjointof(pyhfmodel)
-LL([200., 7])
+LL([.1, 1.])
 priors(pyhfmodel)
 ll =  DensityInterface.logfuncdensity(
     function(params)

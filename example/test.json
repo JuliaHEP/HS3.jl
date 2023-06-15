@@ -9,9 +9,9 @@
         },
         {
             "name": "background",
-            "c": "gen",
+            "c": 1,
             "type": "exponential_dist",
-            "x": "x_1"
+            "x": "gen"
         },
         {
             "name" : "model1",

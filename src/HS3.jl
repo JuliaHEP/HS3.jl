@@ -7,23 +7,26 @@ Template for Julia packages.
 """
 
 module HS3
-import JSON3, PropDicts, Distributions, ValueShapes, StatsBase, DensityInterface, LiteHF, Parameters
-import NamedTupleTools
-abstract type AbstractHS3Spec end
+    import JSON3, Distributions, ValueShapes, StatsBase, DensityInterface, LiteHF, NamedTupleTools
+    using Parameters 
 
-include("BuiltinDist.jl")
-include("BuiltinAxes.jl")
-include("BuiltinDomains.jl")
-include("BuiltinParameterPoints.jl")
-include("read_in.jl")
-include("BuiltinFunctions.jl")
-include("MetaInformation.jl")
-include("BuiltinData.jl")
-include("TopologicalSort.jl")
-include("BuiltinHistFact.jl")
-include("BuiltinLikelihood.jl")
-include("BuiltinAnalyses.jl")
-include("Validator.jl")
+    abstract type AbstractHS3Spec end
 
-#include("BuiltinOutput.jl")
-end # module
+    include("read_in.jl")
+    include("utils.jl")
+   
+    include("specs/otherspecs.jl")
+    include("specs/parameter_pointspecs.jl")
+    include("specs/spec_utils.jl")
+    include("specs/domainspecs.jl")
+    include("specs/distributionspecs.jl")
+    include("specs/functionspecs.jl")
+    include("specs/dataspecs.jl")
+    include("specs/histfactspecs.jl")
+    include("specs/likelihoodspecs.jl")
+    include("specs/analysesspecs.jl")  
+
+    for file in readdir("src/builders", sort = false)
+        include(joinpath("builders/", file))
+    end
+end 

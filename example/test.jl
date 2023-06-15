@@ -1,4 +1,22 @@
 using HS3
+example_dict = file_to_dict("./example/simple_histfact.json")
+using BenchmarkTools
+example_dict[:functions]
+example_dict[:distributions][1].samples
+HS3._typed_content(HS3._typed_content(l))
+a = HS3.generate_specs(example_dict)
+b = merge(a.distributions, a.functions)
+HS3.topological_sort(b)
+typeof(b.params.summands)
+f = Base.Fix1(HS3.substitute_variables, b)
+f
+f((sig1 = 2, background = 4, test_abc=3,))
+HS3.substitute_variables(b[end], (sig1 = 2, background = 4, :test_abc => 4, gen = 3, func1 =4))
+c = HS3.make_functional(b[end])
+using Distributions
+c((test_abc = 4, sig1 = Normal(), func1=4, background = Exponential()))
+HS3.generate_specs("./example/test.json")
+
 using BenchmarkTools
 
 HS3.AxesSpec( min=3, nbins=5)
@@ -7,12 +25,12 @@ validate_file("./example/test.json")
 as
 @btime Bool <: Integer
 typeof(2) <:Integer
-example_dict = file_to_dict("./example/test.json")
+
 a = HS3.make_parameterpointspecs(example_dict[:parameter_points]) 
 #HS3.@store c = a[:starting_values].par_1 
 
 
-HS3.generate_all_specs("./example/test.json")
+
 
 #c = a[:starting_values].par_1 
 b = a[:starting_values]
