@@ -1,0 +1,106 @@
+{
+    "distributions": [
+        {
+            "name": "mychannel",
+            "type": "histfactory_dist",
+            "axes": [
+                {
+                    "name": "obs_x"
+                }
+            ],
+            "samples": [
+                {
+                    "name": "signal_MC",
+                    "data": {
+                        "contents": [3, 2]
+                    },
+                    "modifiers": [
+                        {
+                            "name": "mu",
+                            "type": "normfactor"
+                        }
+                    ]
+                },
+                {
+                    "name": "bkg_MC",
+                    "data":
+                    {
+                        "contents": [8, 6],
+                        "errors": [0.25, 0.5]
+                    }, 
+                    "modifiers": [
+                        {   
+                            "name": "MCstat", 
+                            "type": "staterror" 
+                        }
+                    ]
+                },
+                {
+                    "name": "bkg_MC2",
+                    "data": {
+                        "contents" : [12, 7],
+                        "errors" : [0.25, 0.13]
+                    },
+                    "modifiers": [
+                        {   "name": "MCstat", 
+                            "type": "staterror"
+                        },
+                        {   
+                            "name": "shape2", 
+                            "type": "shapesys", 
+                            "data": { "vals" : [3.4, 1.2] }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "data": [
+        {
+        "name": "observations",
+        "contents": [22, 15],
+        "type": "binned",
+        "axes": [
+            {
+                "name": "obs_x"
+            }
+        ]
+     }
+    ],
+    "analyses": [
+        { 
+            "name": "Measurement",
+            "likelihood" : "likelihood1",
+            "parameters_of_interest": ["mu"],
+            "parameter_domain" : "domain1"
+        }
+    ],
+    "likelihoods": [
+        {
+            "name" : "likelihood1",
+            "distributions" : ["mychannel"],
+            "data" : ["observations"]
+        }
+    ],
+    "metadata": {
+            "hs3_version" : "0.2.0" 
+    },
+    "domains": [
+        {
+            "type": "product_domain",
+            "name": "domain1",
+            "axes": [
+                {
+                    "name" : "mu",
+                    "max" : 10,
+                    "min": 0
+                },
+                {
+                    "name" : "shape2",
+                    "max" : 10,
+                    "min": 0
+                }
+            ]
+        }
+    ]
+}

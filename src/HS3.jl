@@ -29,4 +29,5 @@ module HS3
     for file in readdir("src/builders", sort = false)
         include(joinpath("builders/", file))
     end
+    include("Validator.jl")
 end 

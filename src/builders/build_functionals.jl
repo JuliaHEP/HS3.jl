@@ -93,7 +93,7 @@ function make_functional(spec::AbstractFunctionalSpec, sorted_functionals::Vecto
     funct = make_functional(spec)
     return params -> begin
         for (k, v) in zip(keys(functionals), functionals)
-            (typeof(v) <: Number) && break
+            (typeof(v) <: Distributions.Distribution) && break
             functionals = merge(functionals, (k => v(merge(functionals, params)),))
         end
         funct(merge(functionals, params))

@@ -61,7 +61,6 @@ A likelihood function.
 """   
 function generate_likelihood(dist::HistfactPDF, data::StatsBase.Histogram)  
     likelihood = LiteHF.pyhf_logjointof(dist.channel[1], data.weights, dist.prior)
-    println(keys(dist.prior))
     return params -> likelihood([convert(Float64, params[x]) for x in keys(dist.prior)])
 end
     

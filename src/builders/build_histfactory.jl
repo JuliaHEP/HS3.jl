@@ -27,17 +27,111 @@ Create a dictionary representation of a given `modifier` object usable for the L
 A dictionary representing the input `modifier` object.
 
 """
-make_dict_from_modifier(modifier::NormfactorSpec) = Dict(:type => "normfactor", :data => nothing)
+make_dict_from_modifier(modifier::NormfactorSpec, sample::HistFactorySampleSpec) = Dict(:type => "normfactor", :data => nothing)
 
-make_dict_from_modifier(modifier::NormsysSpec) = Dict(:type => "normsys", :data => Dict(:hi => modifier.data.hi, :lo => modifier.data.lo))
+make_dict_from_modifier(modifier::NormsysSpec, sample::HistFactorySampleSpec) = Dict(:type => "normsys", :data => Dict(:hi => modifier.data.hi, :lo => modifier.data.lo))
 
-make_dict_from_modifier(modifier::StaterrorSpec) = Dict(:type => "staterror", :data => modifier.data)
+function make_dict_from_modifier(modifier::StaterrorSpec, sample::HistFactorySampleSpec) 
+    @assert sample.errors !== nothing
+    Dict(:type => "staterror", :data => sample.errors/sum(sample.data))
+end
+make_dict_from_modifier(modifier::HistosysSpec, sample::HistFactorySampleSpec) = Dict(:type => "histosys", :data => Dict(:hi_data => modifier.data.hi.contents, :lo_data => modifier.data.lo.contents))
 
-make_dict_from_modifier(modifier::HistosysSpec) = Dict(:type => "histosys", :data => Dict(:hi_data => modifier.data.hi.contents, :lo_data => modifier.data.lo.contents))
+function make_dict_from_modifier(modifier::ShapesysSpec, sample::HistFactorySampleSpec)
+    if modifier.data === nothing 
+        @assert modifier.constraint == Val{:Const}()
+        data = zeros(length(sample.data))
+    else 
+        data = modifier.data.vals 
+    end
+    Dict(:type => "shapesys", :data => data)
+end 
 
-make_dict_from_modifier(modifier::ShapesysSpec) = Dict(:type => "shapesys", :data => modifier.data.vals)
+make_dict_from_modifier(modifier::ShapefactorSpec, sample::HistFactorySampleSpec) = Dict(:type => "shapefactor", :data => modifier.data)
+#TODO check this
 
-make_dict_from_modifier(modifier::ShapefactorSpec) = Dict(:type => "shapefactor", :data => modifier.data)
+"""
+make_modifier_dict(sample::HistFactorySampleSpec)
+
+Create a modifier dictionary for LiteHF.jl and constraint dictionary from a HistFactorySampleSpec object.
+
+# Arguments
+- `sample`: A HistFactorySampleSpec object containing modifiers.
+
+# Returns
+- `mod_arr`: An array of modifier dictionaries.
+- `constraints`: A dictionary mapping modifier names to their constraints, if specified.
+
+"""
+function make_modifier_dict(sample::HistFactorySampleSpec)
+    constraints = NamedTuple()
+    mod_arr = []
+    for (mod_name, mod) in zip(keys(sample.modifiers), sample.modifiers)
+        mod_dict = make_dict_from_modifier(mod, sample)
+        mod_dict[:name] = String(mod_name)
+        mod_arr = push!(mod_arr, mod_dict)
+        if :constraint ∈ fieldnames(typeof(mod)) && mod.constraint !== nothing
+            constraints = merge(constraints, [Symbol(mod_dict[:name]) => mod.constraint,])
+        end 
+    end
+    mod_arr, constraints
+end
+
+
+"""
+_make_constraint(::Val{distribution_type})
+
+Create and return a constraint object based on the specified distribution type.
+
+# Arguments
+- `distribution_type`: A `Val` type specifying the distribution type.
+
+# Returns
+- A constraint object corresponding to the specified distribution type.
+
+# Supported Distribution Types
+- `:Gauss`: Gaussian distribution (Normal distribution)
+- `:Poisson`: Poisson distribution
+- `:Const`: Constant distribution
+- `:LogNormal`: Log-normal distribution
+
+"""
+### TODO: This needs improvement
+_make_constraint(::Val{:Gauss}) = Distributions.Normal()
+
+_make_constraint(::Val{:Poisson}) = LiteHF.RelaxedPoisson(1.)
+
+_make_constraint(::Val{:Const}) = LiteHF.FlatPrior(0, 5)
+
+_make_constraint(::Val{:LogNormal}) = Distributions.LogNormal()
+
+
+"""
+make_sample_dict(samples)
+
+Create a sample dictionary and constraint dictionary from a collection of samples.
+
+# Arguments
+- `samples`: A collection of samples.
+
+# Returns
+- `sample_arr`: An array of sample dictionaries.
+- `constraints`: A dictionary mapping modifier names to their constraints, if specified.
+
+"""
+function make_sample_dict(samples)
+    constraints = NamedTuple()
+    sample_arr = []
+    for (sample_name, sample) in zip(keys(samples), samples)
+        sample_dict =  Dict(key => getfield(sample, key) for key ∈ fieldnames(HistFactorySampleSpec))
+        sample_dict[:name] = sample_name   
+        mod_arr, temp_constraints = make_modifier_dict(sample)
+        constraints = merge(constraints, temp_constraints)
+        sample_dict[:modifiers] = mod_arr
+        sample_arr  = push!(sample_arr, sample_dict)
+    end
+    sample_arr, constraints
+end
 
 
 """
@@ -55,35 +149,21 @@ A HistfactPDF object representing the constructed probability density function.
 
 """
 function make_histfact(histfact_spec::HistFactorySpec, channel_name::Symbol)
-    sample_names = keys(histfact_spec.samples)
-    sample_arr = []
-    global_modnames = []
-    custom_constraints = []
-    for sample in 1:length(histfact_spec.samples)
-        temp_dict =  Dict(key => getfield(histfact_spec.samples[sample], key) for key ∈ fieldnames(HistFactorySampleSpec))
-        temp_dict[:name] = sample_names[sample]   
-        mod_arr = []
-        mod_names_in_sample = keys(histfact_spec.samples[sample].modifiers)
-        for (mod_name, mod) in zip(keys(histfact_spec.samples[sample].modifiers), histfact_spec.samples[sample].modifiers)
-            mod_dict = make_dict_from_modifier(mod)
-            mod_dict[:name] = String(mod_name)
-            mod_arr = push!(mod_arr, mod_dict)
-            #if haskey(mod, :constraint) 
-            #    custom_constraints = push!(custom_constraints, (mod_dict[:name], mod.constraint))
-            #end
-        end
-        temp_dict[:modifiers] = mod_arr
-        sample_arr  = push!(sample_arr, temp_dict)
-        global_modnames = push!(global_modnames, mod_names_in_sample...)
-    end
+    sample_arr, constraints = make_sample_dict(histfact_spec.samples)
     channel_dict = LiteHF.build_channel(Dict(:samples => sample_arr); misc=Dict())
-    channel = LiteHF.build_pyhfchannel((channel_name => channel_dict), global_modnames)
-    global_unique = Tuple(unique!(global_modnames))
-    #@info channel_name global_unique
-    #println([(global_modnames[1][k]) for k in 1:2])
-    input_modifiers = [channel[2][k] for k in keys(channel[2])]
-    priors = NamedTuple{Tuple(keys(channel[2]))}(LiteHF._prior.(input_modifiers))
-    #priors = merge(priors,  NamedTuple{[custom_constraints[2][k] for k in 1:length(custom_constraints)]}(custom_constraints[1]...))
-    HistfactPDF(channel, priors)
+    modifier_names = unique!(reduce(vcat, [channel_dict[i].modifier_names for i in keys(channel_dict)]))
+    channel = LiteHF.build_pyhfchannel((channel_name => channel_dict), modifier_names)
+    @assert length(modifier_names) == length(keys(channel[2]))
+
+
+    constraint_terms = NamedTuple()
+    for name in unique!(modifier_names)
+        if name in keys(constraints)
+            constraint_terms = merge(constraint_terms, [name => _make_constraint(constraints[name])])
+        else
+            constraint_terms = merge(constraint_terms, [name => LiteHF._prior(channel[2][name])])
+        end
+    end
+    HistfactPDF(channel, constraint_terms)
 end
 

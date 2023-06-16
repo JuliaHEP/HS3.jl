@@ -82,12 +82,16 @@ function generate_HistFactorySampleSpec(sample)
     modifier_specs = (;)
     for modifier in sample.modifiers
         if haskey(modifier, :parameter) ###for ttW, Parameter sometimes replaces name in that file...
-            modifier_specs = merge(modifier_specs, (_val_content(modifier.parameter) => generate_ModifierSpec(modifier, sample.data),))
+            modifier_specs = merge(modifier_specs, (_val_content(modifier.parameter) => generate_ModifierSpec(modifier),))
         else
-            modifier_specs = merge(modifier_specs, (_val_content(modifier.name) => generate_ModifierSpec(modifier, sample.data),))
+            modifier_specs = merge(modifier_specs, (_val_content(modifier.name) => generate_ModifierSpec(modifier),))
         end
     end
-    HistFactorySampleSpec(data = Vector(sample.data.contents), modifiers = modifier_specs)
+    if haskey(sample.data, :errors)
+        HistFactorySampleSpec(data = Vector(sample.data.contents), errors = Vector(sample.data.errors), modifiers = modifier_specs)
+    else
+        HistFactorySampleSpec(data = Vector(sample.data.contents), modifiers = modifier_specs)
+    end
 end
 
 
@@ -108,12 +112,12 @@ ShapesysSpec <: AbstractModifierSpec
 A type representing an uncorrelated shape systematics modifier specification in the HistFactory framework.
 
 Fields:
-- constraint::Union{String, Nothing}: A constraint associated with the modifier.
+- constraint::Union{Symbol, Nothing}: A constraint associated with the modifier.
 - data::NamedTuple: The data associated with the modifier.
 """
 @with_kw struct ShapesysSpec <: AbstractModifierSpec 
-    constraint::Union{String, Nothing} = nothing 
-    data::NamedTuple = (vals = [0.0],)
+    constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = nothing 
+    data::Union{NamedTuple, Nothing} = nothing
 end
 
 """
@@ -122,11 +126,11 @@ HistosysSpec <: AbstractModifierSpec
 A type representing a correlated shape systematics modifier specification in the HistFactory framework.
 
 Fields:
-- constraint::Union{String, Nothing}: The constraint associated with the modifier.
+- constraint::Union{Symbol, Nothing}: The constraint associated with the modifier.
 - data::NamedTuple: The data associated with the modifier.
 """
 @with_kw struct HistosysSpec <: AbstractModifierSpec 
-    constraint::Union{String, Nothing} = nothing 
+    constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = nothing 
     data::NamedTuple
 end
 
@@ -136,12 +140,12 @@ NormsysSpec <: AbstractModifierSpec
 A type representing a normalization systematics modifier specification in the HistFactory framework.
 
 Fields:
-- constraint::Union{String, Nothing}: The constraint associated with the modifier.
+- constraint::Union{Symbol, Nothing}: The constraint associated with the modifier.
 - data::NamedTuple: The data associated with the modifier.
 """
 
 @with_kw struct NormsysSpec <: AbstractModifierSpec 
-    constraint::Union{String, Nothing} = nothing 
+    constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = nothing 
     data::NamedTuple 
 end
 
@@ -158,25 +162,22 @@ StaterrorSpec <: AbstractModifierSpec
 A type representing a statistical error modifier specification in the HistFactory framework.
 
 Fields:
-- constraint::Union{String, Nothing}: The constraint associated with the modifier.
-- data::AbstractArray: The data associated with the modifier. For Staterror this data array has to be of same length as the data array of the sample.
+- constraint::Union{Symbol, Nothing}: The constraint associated with the modifier.
 """
 @with_kw struct StaterrorSpec <: AbstractModifierSpec 
-    constraint::Union{String, Nothing} = nothing 
-    data::AbstractArray = [] 
+    constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = nothing 
 end
-
 """
 ShapefactorSpec <: AbstractModifierSpec
 
 A type representing a shape factor modifier specification in the HistFactory framework.
 
 Fields:
-- constraint::Union{String, Nothing}: The constraint associated with the modifier.
+- constraint::Union{Symbol, Nothing}: The constraint associated with the modifier.
 - data::AbstractArray: The data associated with the modifier.
 """
 @with_kw struct ShapefactorSpec <: AbstractModifierSpec 
-    constraint::Union{String, Nothing} = nothing 
+    constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = nothing 
     data::AbstractArray = [] 
 end
 
@@ -193,12 +194,9 @@ Arguments:
 Returns:
 - `AbstractModifierSpec`: The generated modifier specification.
 """
-function generate_ModifierSpec(nt::NamedTuple, sample_data)
+function generate_ModifierSpec(nt::NamedTuple)
     tp = nt.type
-    nt = NamedTupleTools.delete(nt, (:type, :name, :constraint_name, :parameter, :constraint))
-    #if :data ∉ fieldnames(nt) && tp != Val{:normfactor}()
-    #    nt = merge(nt, (data = zeros(length(sample_data.contents)),))
-    #end
+    nt = NamedTupleTools.delete(nt, (:type, :name, :constraint_name, :parameter)) #for now
     generate_ModifierSpec(tp, nt)
 end
 
@@ -213,7 +211,7 @@ Arguments:
 
 Returns:
 - `AbstractModifierSpec`: The generated modifier specification.
-"""
+""" 
 generate_ModifierSpec(::Val{:shapefactor}, mod::NamedTuple) = ShapefactorSpec(; mod...)
 
 generate_ModifierSpec(::Val{:shapesys}, mod::NamedTuple) = ShapesysSpec(; mod...)

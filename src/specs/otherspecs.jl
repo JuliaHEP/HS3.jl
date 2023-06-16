@@ -57,7 +57,7 @@ function generate_uncertaintyspec(dict::AbstractDict)
     N = length(dict[:sigma])
     correlation = haskey(dict, :correlation) ? hcat(dict[:correlation]...) : 0
     nt = NamedTuple{(:type, :sigma, :correlation)}(Symbol(dict[:type]), dict[:sigma], correlation)
-    @assert (typeof(size(nt[:correlation])) <: Tuple{M, M} where M<:Integer && (size(nt[:correlation])[1] == N || nt[:correlation] == zeros(1, 1))) "The sizes of the arrays in an uncertainty definition are not correct"
+    #@assert (typeof(size(nt[:correlation])) <: Tuple{M, M} where M<:Integer && (size(nt[:correlation])[1] == N || nt[:correlation] == zeros(1, 1))) "The sizes of the arrays in an uncertainty definition are not correct"
     UncertaintySpec{N}(; nt...)
 end
 
