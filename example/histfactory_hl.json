@@ -1,0 +1,199 @@
+{
+    "data": [
+        {
+            "name": "obsData",
+            "contents": [
+                122.0,
+                112.0
+            ],
+            "uncertainty": {
+                "type" : "gaussian_uncertainty",
+                "sigma": [
+                    11.045361017187261,
+                    10.583005244258363
+                ]
+            },
+            "axes": [
+                {
+                    "max": 2.0,
+                    "min": 1.0,
+                    "nbins": 2,
+                    "name":  "obs_x_channel1"
+                }
+            ],
+            "type": "binned"
+        }
+    ],
+    "likelihoods": [  
+        {
+            "name": "main_likelihood",
+            "distributions": ["channel1"],
+            "data": ["obsData"]
+        }
+    ],
+    "distributions": [
+        {
+            "name": "channel1",
+            "type": "histfactory_dist",
+            "samples": [
+                {
+                    "name": "background1",
+                    "data": {
+                        "contents": [
+                            100.0,
+                            0.0
+                        ],
+                        "errors": [
+                            5.000000074505806,
+                            0.0
+                        ]
+                    },
+                    "modifiers": [
+                        {
+                            "name": "alpha_syst2",
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "type": "normsys"
+                        },
+                        {
+                            "type": "staterror",
+                            "name": "staterror",
+                            "constraint": "Poisson"
+                        }
+                    ]
+                },
+                {
+                    "name": "background2",
+                    "data":{
+                        "contents": [
+                            0.0,
+                            100.0
+                        ],
+                        "errors": [
+                            0.0,
+                            10.0
+                        ]
+                    },
+                    "modifiers": [
+                        {
+                            "name": "alpha_syst3",
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "type": "normsys"
+                        },
+                        {
+                            "type": "staterror",
+                            "name": "staterror",
+                            "constraint": "Poisson"
+                        }
+                    ]
+                },
+                {
+                    "name": "signal",
+                    "modifiers": [
+                        {
+                            "type": "normfactor",
+                            "name":"mu"
+                        },
+                        {
+                            "name": "alpha_syst1", 
+                            "data":{
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "type":"normsys"
+                            
+                        }
+                    ],
+                    "data": {
+                        "contents": [
+                            20.0,
+                            10.0
+                        ],
+                        "errors": [
+                            4.47213595499958,
+                            3.1622776601683795
+                        ]
+                    }
+                }
+            ],
+            "axes": [
+                {
+                    "max": 2.0,
+                    "min": 1.0,
+                    "nbins": 2,
+                    "name":  "obs_x_channel1"
+                }
+            ]
+        }
+    ],
+    "parameter_points": [
+        {
+            "name" : "starting_values",
+            "parameters": [
+                {
+                    "const": true,
+                    "value": 1,
+                    "name": "alpha_Lumi"
+                },
+                {
+                    "name": "alpha_syst1",
+                    "value": 0
+                },
+                {
+                    "name": "alpha_syst2",
+                    "value": 0
+                },
+                {
+                    "name": "alpha_syst3",
+                    "value": 0
+                },
+                {
+                    "name": "mu",
+                    "value": 1
+                }
+            ]
+        }
+    ],
+    "domains": [
+        {
+            "name": "default_domain",
+            "type": "product_domain",
+            "axes": [
+                {
+                    "max": 5.0,
+                    "min": -5.0,
+                    "name": "alpha_syst1"
+                },
+                {
+                    "max": 5.0,
+                    "min": -5.0,
+                    "name": "alpha_syst2" 
+                },
+                {
+                    "max": 5.0,
+                    "min": -5.0,
+                    "name": "alpha_syst3"
+                },
+                {
+                    "max": 5.0,
+                    "min": -3.0,
+                    "name": "mu"
+                }
+            ]
+        }
+    ],
+    "analyses": [
+        {
+            "name": "primary_analysis",
+            "likelihood" : "main_likelihood",
+            "parameters_of_interest" : ["mu"],
+            "parameter_domain" : "default_domain",
+            "parameter_init": "starting_values"
+        }
+    ]
+}
