@@ -84,4 +84,4 @@ _val_content(::Val{x}) where x = x
 
 _val_content(A::AbstractArray) = _val_content.(A)
 
-_val_content(::Any) = nothing
+_val_content(A::Any) = A

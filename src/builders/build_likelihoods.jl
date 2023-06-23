@@ -27,16 +27,21 @@ function generate_likelihood(dist, data::StatsBase.Histogram)
     return params -> likelihood(params)
 end
 
+
 """
     generate_likelihood(dist)
 
-Generate a likelihood function for a given distribution.
+Generate a likelihood function based on the provided distribution.
 
 # Arguments
-- `dist`: A distribution function that takes `params` as input and returns a tuple `(distribution, position vector)` representing the value and additional arguments for the distribution.
+- `dist`: A functional object. Usually these are defined as auxiliary disitrbutions.
 
 # Returns
-A function that computes the logarithm of the probability density function (PDF) of the distribution.
+- A function that calculates the likelihood of the given distribution.
+
+# Details
+This function takes a function object `dist` and returns a new function that calculates the likelihood of the distribution. The generated likelihood function accepts a parameter vector `params` as input and returns the logarithm of the probability density function (PDF).
+If the variables `x` are a vector, the function returns the log PDF values for each element of `x`. If `x` is a scalar value, the function returns the log PDF value for that single value.
 """
 function generate_likelihood(dist)
     return params -> begin
@@ -83,13 +88,13 @@ function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::Name
     generated_data = []
     free_parameters = []
     sorted_specs = topological_sort(functional_specs)
-    #println("sorted: ", sorted_specs)
+
     ### making distributions
-    if !isempty(sorted_specs)
+    if likelihood_spec.distributions !== nothing
         for i in 1:length(likelihood_spec.distributions)
             if typeof(functional_specs[Symbol(likelihood_spec.distributions[i])]) == HistFactorySpec
                 funct = make_histfact(functional_specs[Symbol(likelihood_spec.distributions[i])], Symbol(likelihood_spec.distributions[i]))
-                free_parameters = push!(free_parameters, collect(keys(funct.prior)))
+                #free_parameters = push!(free_parameters, collect(keys(funct.prior)))
                 generated_dist = push!(generated_dist, funct)
             else
                 generated_dist = push!(generated_dist, make_functional(functional_specs[Symbol(likelihood_spec.distributions[i])], sorted_specs))
@@ -102,7 +107,7 @@ function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::Name
     for i in 1:length(generated_dist)
         likelihood_functions = push!(likelihood_functions, generate_likelihood(generated_dist[i], generated_data[i]))
     end
-    #auxiliary likelihoods 
+    #auxiliary disitributions 
     if likelihood_spec.aux_distributions !== nothing
         for aux in likelihood_spec.aux_distributions
             likelihood_functions = push!(likelihood_functions, generate_likelihood(make_functional(functional_specs[Symbol(aux)], sorted_specs)))

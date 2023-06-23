@@ -19,7 +19,7 @@ Fields:
 """
 @with_kw struct AnalysesSpec <: AbstractHS3Spec
     likelihood::String 
-    parameter_domain::String 
+    domains::Union{AbstractArray{String}, Nothing, AbstractArray} = nothing
     parameters_of_interest::Union{AbstractArray{String}, Nothing} = nothing
     parameter_init::Union{String, Nothing} = nothing
     prior::Union{String, Nothing} = nothing

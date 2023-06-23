@@ -1,5 +1,23 @@
 using HS3
-example_dict = file_to_dict("./example/simple_histfact.json")
+example_dict = file_to_dict("./example/test.json")
+dict = file_to_dict("./example/test.json")
+specs = HS3.generate_specs(dict)
+analysis = HS3.make_analyses(specs.analyses[1], specs)
+
+
+a = logdensityof(analysis.likelihood, (param_c = -2, param_mean = 0, param_sigma =1))
+b = logdensityof(analysis.likelihood, (mu=1, syst2 =0, mcstat_bin2 = 1, syst1 = 0, syst3 = 0,  mcstat_bin1 =1))
+c = logdensityof(analysis.likelihood, (mu = -2.4, syst2 = -0.009487064624933319, mcstat_bin2 = 0.9999950810630367, syst1 = 0.9978812987492401, syst3 = 1.0719092640875414, mcstat_bin1 = 1.0000003487684337))
+
+using LiteHF
+
+abs(a - b)
+dump(analysis.likelihood._log_f.likelihood_functions.contents[1])
+dump(analysis.likelihood)
+using BAT, ValueShapes, Distributions
+posterior = PosteriorMeasure(analysis.likelihood, NamedTupleDist(param_c = Uniform(-3, 1), param_mean = Uniform(0, 1), param_sigma = Uniform(0, 1)))
+bat_findmode(posterior).result
+
 using BenchmarkTools
 example_dict[:functions]
 example_dict[:distributions][1].samples

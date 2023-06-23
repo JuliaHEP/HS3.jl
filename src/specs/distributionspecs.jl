@@ -57,7 +57,7 @@ parse_and_generate_distributionspec(dict::AbstractDict)
 Parse a dictionary and delegate the generation of a distribution specification based on the provided data to the corresponding
 `generate_distributionspec` function.
 
-Returns a distribution specification of type `DistributionSpec` appropriate to the specific type of dsitribution. 
+Returns a distribution specification of type `DistributionSpec` appropriate to the specific type of distribution. 
 
 # Arguments
 - `dict::AbstractDict`: A dictionary containing the necessary parameters for the distribution specification. 

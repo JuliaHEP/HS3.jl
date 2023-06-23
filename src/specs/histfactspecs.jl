@@ -40,7 +40,7 @@ Specification for a HistFactory sample.
 - `modifiers::NamedTuple`: Named tuple containing any modifiers for the sample.
 
 """
-@with_kw struct HistFactorySampleSpec <: AbstractHistFactorySpec
+@with_kw struct HistFactorySampleSpec <: AbstractHS3Spec
     data::AbstractArray{<:Number}
     errors::Union{AbstractArray{<:Number}, Nothing} = nothing 
     modifiers::NamedTuple

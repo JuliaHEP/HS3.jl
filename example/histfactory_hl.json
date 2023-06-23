@@ -6,13 +6,6 @@
                 122.0,
                 112.0
             ],
-            "uncertainty": {
-                "type" : "gaussian_uncertainty",
-                "sigma": [
-                    11.045361017187261,
-                    10.583005244258363
-                ]
-            },
             "axes": [
                 {
                     "max": 2.0,

@@ -102,7 +102,7 @@ function generate_axes_specs(axes_array)
     specs = NamedTuple{}()
     for element in axes_array
         temp = NamedTupleTools.delete(_typed_content(element), :name)
-        specs = merge(specs, (Symbol(element.name) => AxesSpec(; temp...),),)
+        specs = merge(specs, (Symbol(_val_content(element.name)) => AxesSpec(; temp...),),)
     end
     return specs
 end

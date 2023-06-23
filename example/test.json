@@ -2,16 +2,16 @@
     "distributions": [
         {
             "name": "sig1",
-            "mean": 0,
-            "sigma" : 1,
+            "mean": "param_mean",
+            "sigma" : "param_sigma",
             "type": "normal_dist",
             "x": "x_1"
         },
         {
             "name": "background",
-            "c": 1,
+            "c": "param_c",
             "type": "exponential_dist",
-            "x": "gen"
+            "x": "x_1"
         },
         {
             "name" : "model1",
@@ -24,7 +24,7 @@
         }
     ],
     "metadata": {
-        "hs3_version" : 0.2
+        "hs3_version" : "0.2"
     },
     "functions": [
         {

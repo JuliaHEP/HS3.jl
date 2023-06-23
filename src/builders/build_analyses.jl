@@ -22,13 +22,13 @@ function make_analyses(ana_spec::AnalysesSpec, specs::NamedTuple)
     analyses = (
         likelihood = ll_nt.likelihood,
         free_parameters = ll_nt.free_parameters,
-        parameter_domain = make_domain_ranges(specs[:domains][Symbol(ana_spec.parameter_domain)],)
+        #parameter_domain = make_domain_ranges(specs[:domains][Symbol(ana_spec.parameter_domain)],)
     )
     if ana_spec.parameter_init !== nothing
         analyses = merge(analyses, (parameter_init = make_parameterpoints(specs[:parameter_points][Symbol(ana_spec.parameter_init)]),))
     end
-    if ana_spec.prior === nothing
-        analyses = merge(analyses, (prior = generate_uniform_prior_from_domain(specs[:domains][Symbol(ana_spec.parameter_domain)]),))
+    if ana_spec.prior === nothing && ana_spec.domains !== nothing
+        analyses = merge(analyses, (prior = generate_uniform_prior_from_domain(specs[:domains][Symbol(ana_spec.domains[1])]),))
     else 
         analyses = merge(analyses, (prior = (specs[:distributions][Symbol(ana_spec.prior)]),))  
     end
