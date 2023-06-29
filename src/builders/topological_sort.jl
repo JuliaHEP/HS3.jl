@@ -93,7 +93,7 @@ function _create_nodes(specs::NamedTuple)
     node_info_dict = Dict{Symbol, NodeInfo}()
     for key in keys(specs)
         if typeof(specs[key]) <: AbstractDistributionSpec
-            node_array = push!(node_array, _flatten_parameters((values(specs[key].params), values(specs[key].variables))))
+            node_array = push!(node_array, _flatten_parameters(values(specs[key].params)))
         elseif typeof(specs[key]) <: AbstractFunctionSpec
             node_array = push!(node_array, _flatten_parameters((values(specs[key].params))))
         elseif typeof(specs[key]) <: HistFactorySpec

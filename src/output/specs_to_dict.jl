@@ -39,7 +39,6 @@ function specs_to_json_dict(myStruct::HistFactorySampleSpec, name::String="defau
 end
 
 function specs_to_json_dict(myStruct::AbstractHS3Spec, name::String="default")
-    println("c")
     fields = fieldnames(typeof(myStruct))
     jsonDict = Dict()   
     for field in fields
@@ -77,7 +76,6 @@ function specs_to_json_dict(val::Any)
 end
 
 function specs_to_json_dict(nt::NamedTuple)
-    println("b")
     return [specs_to_json_dict((v), String(k)) for (k, v) in zip(keys(nt), nt)]
 end
 

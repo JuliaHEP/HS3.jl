@@ -12,6 +12,7 @@ The `HistfactPDF` struct represents a probability density function (PDF) defined
 struct HistfactPDF 
     channel::Tuple 
     prior::NamedTuple 
+    order::Vector
 end
 
 
@@ -33,7 +34,8 @@ make_dict_from_modifier(modifier::NormsysSpec, sample::HistFactorySampleSpec, ab
 
 function make_dict_from_modifier(modifier::StaterrorSpec, sample::HistFactorySampleSpec, abs_staterror_data::Number) 
     @assert sample.errors !== nothing
-    Dict(:type => "staterror", :data =>  sample.errors *abs_staterror_data)
+    println(sample.errors * abs_staterror_data)
+    Dict(:type => "staterror", :data =>  sample.errors * abs_staterror_data)
 end
 make_dict_from_modifier(modifier::HistosysSpec, sample::HistFactorySampleSpec, abs_staterror_data::Number) = Dict(:type => "histosys", :data => Dict(:hi_data => modifier.data.hi.contents, :lo_data => modifier.data.lo.contents))
 
@@ -95,14 +97,28 @@ Create and return a constraint object based on the specified distribution type.
 - `:LogNormal`: Log-normal distribution
 
 """
-### TODO: This needs improvement
-_make_constraint(::Val{:Gauss}) = Distributions.Normal()
 
-_make_constraint(::Val{:Poisson} ) = LiteHF.RelaxedPoisson(1.)
+_make_constraint(::Val{:Gauss}, modifier::LiteHF.Normsys) =  Distributions.Normal()
 
-_make_constraint(::Val{:Const} ) = LiteHF.FlatPrior(0, 5)
+_make_constraint(::Val{:Gauss}, modifier::LiteHF.Histosys) = Distributions.Normal()#Distributions.Normal((modifier.interp.Δ_down .+ modifier.interp.Δ_up) ./2, (modifier.interp.Δ_up .- modifier.interp.Δ_down) ./2)
 
-_make_constraint(::Val{:LogNormal} ) = Distributions.LogNormal()
+_make_constraint(::Val{:Gauss}, modifier::LiteHF.Shapesys) = Distributions.Normal(0, modifier.σn2)
+
+_make_constraint(::Val{:Gauss}, modifier::LiteHF.Staterror) = Distributions.Normal(0, modifier.σ)
+
+#_make_constraint(::Val{:Poisson}, modifier::LiteHF.Normsys) = LiteHF.RelaxedPoisson(1. /((modifier.interp.f_up - modifier.interp.f_down)/2))
+
+_make_constraint(::Val{:Poisson}, modifier::LiteHF.Histosys) = @warn "Not defined"
+
+_make_constraint(::Val{:Poisson}, modifier::LiteHF.Shapesys) = LiteHF.RelaxedPoisson(sqrt(modifier.σn2/length(modifier.interp(0.0))))
+
+_make_constraint(::Val{:Poisson}, modifier::LiteHF.Staterror) = LiteHF.RelaxedPoisson(modifier.σ^2)
+
+_make_constraint(::Val{:Const}, modifier::AbstractModifierSpec) = LiteHF.FlatPrior(0, 5)
+
+_make_constraint(::Any, ::Any) = @error "Not a valid entry and thus not defined"
+
+#_make_constraint(::Val{:LogNormal} ) = Distributions.LogNormal()
 
 
 function _calc_staterror_data(samples::NamedTuple)
@@ -174,7 +190,7 @@ function _bin_wise_modifier_contraints(constraints::NamedTuple, constraint_param
     for element in constraint_parameters
         if match(pattern, string(element)) !== nothing
             name = Symbol(replace(string(element), pattern => s""))
-            nt = merge(nt, (Symbol(element) => constraints[name],)) 
+            (constraints[name] !== nothing) ? nt = merge(nt, (Symbol(element) => constraints[name],)) : nothing
         end
     end
     return merge(constraints, nt)
@@ -202,17 +218,16 @@ function make_histfact(histfact_spec::HistFactorySpec, channel_name::Symbol)
     modifier_names = unique!(reduce(vcat, [channel_dict[i].modifier_names for i in keys(channel_dict)]))
     channel = LiteHF.build_pyhfchannel((channel_name => channel_dict), modifier_names)
     @assert length(modifier_names) == length(keys(channel[2])) #sanity check
-
-    constraints = _bin_wise_modifier_contraints(constraints, keys(channel[2]))
+    println("Here", constraints)
+    #constraints = _bin_wise_modifier_contraints(constraints, keys(channel[2]))
     constraint_terms = NamedTuple()
-
-    for name in (keys(channel[2]))
+    for name in keys(channel[2])
         if name in keys(constraints)
-            constraint_terms = merge(constraint_terms, [name => _make_constraint(constraints[name])])
+            constraint_terms = merge(constraint_terms, [name => _make_constraint(constraints[name], channel[2][name])])
         else
             constraint_terms = merge(constraint_terms, [name => LiteHF._prior(channel[2][name])])
         end
     end
-    HistfactPDF(channel, constraint_terms)
+    HistfactPDF(channel, constraint_terms, modifier_names)
 end
 

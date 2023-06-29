@@ -65,8 +65,9 @@ Generate a likelihood function for a given HistfactPDF distribution and histogra
 A likelihood function.
 """   
 function generate_likelihood(dist::HistfactPDF, data::StatsBase.Histogram)  
-    likelihood = LiteHF.pyhf_logjointof(dist.channel[1], data.weights, dist.prior)
-    return params -> likelihood([convert(Float64, params[x]) for x in keys(dist.prior)])
+    likelihood = LiteHF.pyhf_loglikelihoodof(dist.channel[1], data.weights)
+    priors = LiteHF.pyhf_logpriorof(dist.prior)
+    return params -> likelihood([convert(Float64, params[x]) for x in dist.order]) + priors([convert(Float64, params[x]) for x in keys(dist.prior)])
 end
     
 """
@@ -113,15 +114,14 @@ function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::Name
             likelihood_functions = push!(likelihood_functions, generate_likelihood(make_functional(functional_specs[Symbol(aux)], sorted_specs)))
         end
     end
-    return (likelihood = DensityInterface.logfuncdensity(
+    return DensityInterface.logfuncdensity(
         function(params)
             ll = 0.0
             for ll_function in likelihood_functions
                 ll += ll_function(params) 
             end
         return ll
-    end), 
-    free_parameters = unique!(free_parameters))
+    end)
 end
 
 

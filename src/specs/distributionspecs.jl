@@ -44,11 +44,9 @@ spec = DistributionSpec{:gaussian_dist}((mean = 0.0, sigma = 1.0), (x = [1, 2, 3
 
 struct DistributionSpec{disttype, P<:NamedTuple, T<:NamedTuple} <: AbstractDistributionSpec
     params::P
-    variables::T
 end
 
-DistributionSpec{disttype}(params::P, variables::T) where {disttype, P<:NamedTuple, T<:NamedTuple} = DistributionSpec{disttype,P, T}(params, variables)
-DistributionSpec{disttype}(params::P) where {disttype, P<:NamedTuple} = DistributionSpec{disttype,P,typeof((;))}(params,(;))
+DistributionSpec{disttype}(params::P) where {disttype, P<:NamedTuple} = DistributionSpec{disttype,P,typeof((;))}(params)
 
 
 """
@@ -93,19 +91,19 @@ data = (mean = 0.0, sigma = 1.0, x = [1, 2, 3, 4, 5])
 spec = generate_distributionspec(Val(:gaussian_dist), data)
 """
 
-generate_distributionspec(::Val{:exponential_dist}, data::NamedTuple) = DistributionSpec{:exponential_dist}((c = data.c,), (x = data.x,))
+generate_distributionspec(::Val{:exponential_dist}, data::NamedTuple) = DistributionSpec{:exponential_dist}((c = data.c, x = data.x,))
 
 generate_distributionspec(::Val{:normal_dist}, data::NamedTuple) = generate_distributionspec(Val(:gaussian_dist), data)
 
-generate_distributionspec(::Val{:gaussian_dist}, data::NamedTuple) = DistributionSpec{:gaussian_dist}((mean = data.mean, sigma = data.sigma,), (x = data.x,))
+generate_distributionspec(::Val{:gaussian_dist}, data::NamedTuple) = DistributionSpec{:gaussian_dist}((mean = data.mean, sigma = data.sigma, x = data.x,))
 
-generate_distributionspec(::Val{:lognormal_dist}, data::NamedTuple) = DistributionSpec{:lognormal_dist}((mean = data.mean, k = data.k,), (x = data.x,))
+generate_distributionspec(::Val{:lognormal_dist}, data::NamedTuple) = DistributionSpec{:lognormal_dist}((mean = data.mean, k = data.k, x = data.x,))
 
 generate_distributionspec(::Val{:multinormal_dist}, data::NamedTuple) = DistributionSpec{:multinormal_dist}((covariances = reduce(hcat, data.covariances), mean = data.mean, x = data.x,) )
 
-generate_distributionspec(::Val{:poisson_dist}, data::NamedTuple) = DistributionSpec{:poisson_dist}((mean = data.mean,), (x = data.x,))
+generate_distributionspec(::Val{:poisson_dist}, data::NamedTuple) = DistributionSpec{:poisson_dist}((mean = data.mean, x = data.x,))
 
-generate_distributionspec(::Val{:argus_dist}, data::NamedTuple) = DistributionSpec{:argus_dist}((resonance = data.resonance, slope = data.slope, power = data.power,), (x = data.mass,))
+generate_distributionspec(::Val{:argus_dist}, data::NamedTuple) = DistributionSpec{:argus_dist}((resonance = data.resonance, slope = data.slope, power = data.power, x = data.mass,))
 
 generate_distributionspec(::Val{:mixture_dist}, data::NamedTuple) = DistributionSpec{:mixture_dist}((summands = data.summands, coefficients = data.coefficients,)) 
 
@@ -113,7 +111,7 @@ generate_distributionspec(::Val{:product_dist}, data::NamedTuple) = Distribution
 
 generate_distributionspec(::Val{:uniform_dist}, data::NamedTuple) = DistributionSpec{:uniform_dist}((min = data.min, max = data.max,))
 
-generate_distributionspec(::Val{:polynomial_dist}, data::NamedTuple) = DistributionSpec{:polynomial_dist}((coefficients = data.coefficients,), (x= data.x, ))
+generate_distributionspec(::Val{:polynomial_dist}, data::NamedTuple) = DistributionSpec{:polynomial_dist}((coefficients = data.coefficients, x= data.x, ))
 
 generate_distributionspec(::Val{:CrystalBall_dist}, data::NamedTuple) = DistributionSpec{:CrystalBall_dist}((alpha = data.alpha, x= data.x, m0 = data.m0, n = data.n, sigma = data.sigma, ))
 

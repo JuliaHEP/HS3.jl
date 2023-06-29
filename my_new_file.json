@@ -1,170 +1,160 @@
-{
-    "analyses": [
-        {
-            "parameters_of_interest": [
-                "mu"
-            ],
-            "name": "main",
-            "likelihood": "main_likelihood"
+[
+    {
+        "analyses": {
+            "main": {
+                "likelihood": "main_likelihood",
+                "domains": null,
+                "parameters_of_interest": [
+                    "mu"
+                ],
+                "parameter_init": null,
+                "prior": null
+            }
         }
-    ],
-    "distributions": [
-        {
-            "name": "model_channel1",
-            "samples": [
-                {
-                    "name": "signal",
-                    "data": {
-                        "contents": [
-                            20,
-                            10
-                        ]
-                    },
-                    "modifiers": [
-                        {
-                            "name": "syst1",
-                            "data": {
-                                "hi": 1.05,
-                                "lo": 0.95
-                            },
-                            "type": "normsys"
-                        },
-                        {
-                            "name": "mu",
-                            "type": "normfactor"
-                        }
-                    ]
-                },
-                {
-                    "name": "background1",
-                    "data": {
-                        "errors": [
-                            5,
+    },
+    {
+        "misc": {
+            "ROOT_internal": {
+                "combined_datas": {
+                    "observed": {
+                        "index_cat": "channelCat",
+                        "indices": [
                             0
                         ],
-                        "contents": [
-                            100,
-                            0
+                        "labels": [
+                            "channel1"
                         ]
-                    },
-                    "modifiers": [
-                        {
-                            "name": "syst2",
-                            "data": {
-                                "hi": 1.05,
-                                "lo": 0.95
-                            },
-                            "type": "normsys"
-                        },
-                        {
-                            "constraint": "Poisson",
-                            "name": "mcstat",
-                            "type": "staterror"
-                        }
-                    ]
+                    }
                 },
-                {
-                    "name": "background2",
-                    "data": {
-                        "errors": [
-                            0,
-                            10
+                "combined_distributions": {
+                    "main": {
+                        "distributions": [
+                            "model_channel1"
                         ],
-                        "contents": [
-                            0,
-                            100
+                        "index_cat": "channelCat",
+                        "indices": [
+                            0
+                        ],
+                        "labels": [
+                            "channel1"
                         ]
-                    },
-                    "modifiers": [
-                        {
-                            "name": "syst3",
-                            "data": {
-                                "hi": 1.05,
-                                "lo": 0.95
-                            },
-                            "type": "normsys"
-                        },
-                        {
-                            "name": "mcstat",
-                            "type": "staterror"
-                        }
-                    ]
-                }
-            ],
-            "axes": [
-                {
-                    "name": "obs_x_channel1",
-                    "max": 2,
-                    "min": 1,
-                    "nbins": 2
-                }
-            ],
-            "type": "histfactory_dist"
-        }
-    ],
-    "misc": {
-        "ROOT_internal": {
-            "combined_datas": {
-                "observed": {
-                    "index_cat": "channelCat",
-                    "indices": [
-                        0
-                    ],
-                    "labels": [
-                        "channel1"
-                    ]
-                }
-            },
-            "combined_distributions": {
-                "main": {
-                    "distributions": [
-                        "model_channel1"
-                    ],
-                    "index_cat": "channelCat",
-                    "indices": [
-                        0
-                    ],
-                    "labels": [
-                        "channel1"
-                    ]
-                }
-            },
-            "ModelConfigs": {
-                "main": {
-                    "combined_data_name": "observed",
-                    "mcName": "ModelConfig",
-                    "pdfName": "main"
+                    }
+                },
+                "ModelConfigs": {
+                    "main": {
+                        "combined_data_name": "observed",
+                        "mcName": "ModelConfig",
+                        "pdfName": "main"
+                    }
                 }
             }
         }
     },
-    "data": [
-        {
-            "name": "observed_channel1",
-            "axes": [
-                {
-                    "name": "obs_x_channel1",
-                    "max": 2,
-                    "min": 1,
-                    "nbins": 2
+    {
+        "likelihoods": {
+            "main_likelihood": {
+                "data": [
+                    "observed_channel1"
+                ],
+                "distributions": [
+                    "model_channel1"
+                ],
+                "aux_distributions": null
+            }
+        }
+    },
+    {
+        "distributions": {
+            "model_channel1": {
+                "axes": {
+                    "obs_x_channel1": {
+                        "max": 2,
+                        "min": 1,
+                        "nbins": 2
+                    }
+                },
+                "samples": {
+                    "signal": {
+                        "data": [
+                            20,
+                            10
+                        ],
+                        "errors": null,
+                        "modifiers": {
+                            "syst1": {
+                                "constraint": null,
+                                "data": {
+                                    "hi": 1.05,
+                                    "lo": 0.95
+                                }
+                            },
+                            "mu": "HS3.NormfactorSpec()"
+                        }
+                    },
+                    "background1": {
+                        "data": [
+                            100,
+                            0
+                        ],
+                        "errors": [
+                            5,
+                            0
+                        ],
+                        "modifiers": {
+                            "syst2": {
+                                "constraint": null,
+                                "data": {
+                                    "hi": 1.05,
+                                    "lo": 0.95
+                                }
+                            },
+                            "mcstat": {
+                                "constraint": "Val{:Poisson}()"
+                            }
+                        }
+                    },
+                    "background2": {
+                        "data": [
+                            0,
+                            100
+                        ],
+                        "errors": [
+                            0,
+                            10
+                        ],
+                        "modifiers": {
+                            "syst3": {
+                                "constraint": null,
+                                "data": {
+                                    "hi": 1.05,
+                                    "lo": 0.95
+                                }
+                            },
+                            "mcstat": {
+                                "constraint": null
+                            }
+                        }
+                    }
                 }
-            ],
-            "contents": [
-                122,
-                112
-            ],
-            "type": "binned"
+            }
         }
-    ],
-    "likelihoods": [
-        {
-            "name": "main_likelihood",
-            "distributions": [
-                "model_channel1"
-            ],
-            "data": [
-                "observed_channel1"
-            ]
+    },
+    {
+        "data": {
+            "observed_channel1": {
+                "contents": [
+                    122,
+                    112
+                ],
+                "axes": {
+                    "obs_x_channel1": {
+                        "max": 2,
+                        "min": 1,
+                        "nbins": 2
+                    }
+                },
+                "uncertainty": null
+            }
         }
-    ]
-}
+    }
+]

@@ -1,0 +1,94 @@
+{
+    "measurements": [
+        {
+            "name": "main",
+            "config" : {"poi": "mu", "parameters": []}
+        }
+    ],
+    "observations": [
+        {
+            "name": "model_channel1",
+            "data":  [122, 112]
+        }
+    ],
+    "version": "1.0.0",
+    "channels": [
+        {
+            "name": "model_channel1",
+            "samples": [
+                {
+                    "data": [20, 10],
+                    "modifiers": [
+                        {
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "name": "syst1",
+                            "type": "normsys"
+                        },
+                        {
+                            "name": "mu",
+                            "type": "normfactor",
+                            "data": null
+                        }
+                    ],
+                    "name": "signal"
+                },
+                {
+                    "data": [100, 0],
+                    "modifiers": [
+                        {
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "name": "syst2",
+                            "type": "normsys"
+                        },
+                        {
+                            "name": "mcstat",
+                            "type": "staterror",
+                            "data": [20, 0]
+                        }
+                    ],
+                    "name": "background1"
+                },
+                {
+                    "data": [0, 100],
+                    "modifiers": [
+                        {
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "name": "syst3",
+                            "type": "normsys"
+                        },
+                        {
+                            "name": "mcstat",
+                            "type": "staterror",
+                            "data": [0, 40]
+                        }
+                    ],
+                    "name": "background2"
+                }
+            ]
+        }
+    ],
+    "data": [
+        {
+            "name": "observed_channel1",
+            "axes": [
+                {
+                    "name": "obs_x_channel1",
+                    "nbins": 2,
+                    "min": 1,
+                    "max": 2
+                }
+            ],
+            "contents": [122, 112],
+            "type": "binned"
+        }
+    ]
+}

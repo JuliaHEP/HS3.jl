@@ -19,18 +19,19 @@ function make_analyses(ana_spec::AnalysesSpec, specs::NamedTuple)
         functional_specs = specs[:distributions]
     end
     ll_nt = make_likelihood(specs[:likelihoods][Symbol(ana_spec.likelihood)], functional_specs, specs[:data])
-    analyses = (
-        likelihood = ll_nt.likelihood,
-        free_parameters = ll_nt.free_parameters,
+    analyses = (likelihood = ll_nt,
         #parameter_domain = make_domain_ranges(specs[:domains][Symbol(ana_spec.parameter_domain)],)
     )
+    #if ana_spec.domains !== nothing
+    #    analyses = merge(analyses, (parameter_domain = make_domain_ranges(specs[:domains][Symbol(ana_spec.domains[1])]),))
+    #end
     if ana_spec.parameter_init !== nothing
         analyses = merge(analyses, (parameter_init = make_parameterpoints(specs[:parameter_points][Symbol(ana_spec.parameter_init)]),))
     end
     if ana_spec.prior === nothing && ana_spec.domains !== nothing
         analyses = merge(analyses, (prior = generate_uniform_prior_from_domain(specs[:domains][Symbol(ana_spec.domains[1])]),))
     else 
-        analyses = merge(analyses, (prior = (specs[:distributions][Symbol(ana_spec.prior)]),))  
+        #analyses = merge(analyses, (prior = (specs[:distributions][Symbol(ana_spec.prior)]),))  
     end
     if ana_spec.parameters_of_interest !== nothing
         analyses = merge(analyses, (parameters_of_interest = ana_spec.parameters_of_interest,))

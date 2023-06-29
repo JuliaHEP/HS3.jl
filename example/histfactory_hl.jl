@@ -6,6 +6,22 @@ using JSON3
 dict = file_to_dict("./example/rf515_hfJSON.json")
 specs = HS3.generate_specs(dict)
 
+specs2 = HS3.generate_specs(file_to_dict("./example/simple_signal.json"))
+specs2.analyses[1].likelihood
+open("my_new_file.json", "w") do io
+    JSON3.pretty(io, HS3.specs_to_json_dict(specs))
+end
+
+
+analysis2 = HS3.make_analyses(specs2.analyses[1], specs2)
+
+dump(analysis.likelihood)
+a = (analysis.likelihood._log_f.likelihood_functions.contents[1].dist)
+a2 = (analysis2.likelihood._log_f.likelihood_functions.contents[1].likelihood.dist.funct)
+dump(a2)
+(HS3.var"#87#89") <: HS3.Function #true
+a.likelihood
+
 analysis = HS3.make_analyses(specs.analyses[1], specs)
 mu_1 = logdensityof(analysis.likelihood, (mcstat_bin1 =1, mu=1,  syst3 = 0, syst1 = 0, syst2 =0, mcstat_bin2 = 1, ))
 mu_0 = logdensityof(analysis.likelihood, (mu=0, syst2 =0, mcstat_bin2 = 1, syst1 = 0, syst3 = 0,  mcstat_bin1 =1))
@@ -14,19 +30,21 @@ mu_n1 = logdensityof(analysis.likelihood, (mcstat_bin1 =1, mu=-1,  syst3 = 0, sy
 mu_3 = logdensityof(analysis.likelihood, (mu=3, syst2 =0, mcstat_bin2 = 1, syst1 = 0, syst3 = 0,  mcstat_bin1 =1))
 mu_n2 = logdensityof(analysis.likelihood, (mu = -2, syst2 =0, mcstat_bin2 = 1, syst1 = 0, syst3 = 0, mcstat_bin1 = 1))
 mu_n3 = logdensityof(analysis.likelihood, (mu=-3, syst2 =0, mcstat_bin2 = 1, syst1 = 0, syst3 = 0,  mcstat_bin1 =1))
-
+analysis.likelihood
 map(x -> x in [1,2,4,5,8,9,10,11] ,[1,3,5,7,9,4])
 [x in [1,2,4,5,8,9,10,11]  for x = [1,3,5,7,9,4]]
 
 mu = [-3, -2, -1, 0, 1, 2, 3]
 jul = [mu_n3, mu_n2, mu_n1, mu_0, mu_1, mu_2, mu_3]
 root = [81.182296, 46.760037 , 28.471124, 19.447233, 16.529263, 17.977606, 22.721993]
-
+jul ./root
 [jul .+ root]
 
 HS3.BinnedDataSpec{3} <: HS3.BinnedDataSpec
 mu = [0, 1, 2]
 root = [16.529, 19.4472, 17.97606]
+
+
 
 using LiteHF
 using Plots
@@ -58,3 +76,12 @@ nt = (data = (data1 = s,),)
 open("my_new_file.json", "w") do io
     JSON3.pretty(io, a)
 end
+
+using Distributions
+using DensityInterface
+
+a = Normal()
+likelihood = DensityInterface.logfuncdensity(
+    params -> pdf(a, params.x)
+)
+dump(likelihood._log_f.dist)
