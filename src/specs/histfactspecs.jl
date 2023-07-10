@@ -145,7 +145,7 @@ Fields:
 """
 
 @with_kw struct NormsysSpec <: AbstractModifierSpec 
-    constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = nothing 
+    constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = Val{:Gauss}()
     data::NamedTuple 
 end
 
@@ -156,6 +156,9 @@ A type representing a normalization factor modifier specification in the HistFac
 """
 struct NormfactorSpec <: AbstractModifierSpec end
 
+
+struct CustomModifierSpec <: AbstractModifierSpec end
+
 """
 StaterrorSpec <: AbstractModifierSpec
 
@@ -165,7 +168,7 @@ Fields:
 - constraint::Union{Symbol, Nothing}: The constraint associated with the modifier.
 """
 @with_kw struct StaterrorSpec <: AbstractModifierSpec 
-    constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = nothing 
+    constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = Val{:Poisson}() 
 end
 """
 ShapefactorSpec <: AbstractModifierSpec
@@ -180,6 +183,8 @@ Fields:
     constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = nothing 
     data::AbstractArray = [] 
 end
+
+
 
 """
 generate_ModifierSpec(nt::NamedTuple) -> AbstractModifierSpec
@@ -223,4 +228,6 @@ generate_ModifierSpec(::Val{:staterror}, mod::NamedTuple) = StaterrorSpec(; mod.
 generate_ModifierSpec(::Val{:normfactor}, mod::NamedTuple) = NormfactorSpec(; mod...)
 
 generate_ModifierSpec(::Val{:normsys}, mod::NamedTuple) = NormsysSpec(; mod...)
+
+generate_ModifierSpec(::Val{:custom}, mod::NamedTuple) = CustomModifierSpec(; mod...)
 

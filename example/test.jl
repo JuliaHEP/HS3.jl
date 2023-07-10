@@ -3,6 +3,33 @@ example_dict = file_to_dict("./example/test.json")
 dict = file_to_dict("./example/test.json")
 specs = HS3.generate_specs(dict)
 analysis = HS3.make_analyses(specs.analyses[1], specs)
+using DensityInterface
+a = logdensityof(analysis.likelihood)
+for expr in code
+    println(expr)
+    if expr isa Expr && expr.head == :call
+        try 
+            operation = push!(operation, expr.args[1].name)
+        catch end
+        for arg in expr.args
+            if typeof(arg) == QuoteNode
+                params_names = push!(param_names, arg.value)
+            end
+        end
+    end
+end
+
+dump(code[1].args)
+operation
+param_names
+param_names = []
+operation = []
+code = (code_lowered(a)[1].code)
+dump(a)
+a = a.likelihood_functions.contents[1]
+(dump(a))
+
+
 
 
 a = logdensityof(analysis.likelihood, (param_c = -2, param_mean = 0, param_sigma =1))

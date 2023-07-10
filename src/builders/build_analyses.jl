@@ -29,7 +29,7 @@ function make_analyses(ana_spec::AnalysesSpec, specs::NamedTuple)
         analyses = merge(analyses, (parameter_init = make_parameterpoints(specs[:parameter_points][Symbol(ana_spec.parameter_init)]),))
     end
     if ana_spec.prior === nothing && ana_spec.domains !== nothing
-        analyses = merge(analyses, (prior = generate_uniform_prior_from_domain(specs[:domains][Symbol(ana_spec.domains[1])]),))
+        #analyses = merge(analyses, (prior = generate_uniform_prior_from_domain(specs[:domains][Symbol(ana_spec.domains[1])]),))
     else 
         #analyses = merge(analyses, (prior = (specs[:distributions][Symbol(ana_spec.prior)]),))  
     end

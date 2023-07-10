@@ -67,9 +67,47 @@ A likelihood function.
 function generate_likelihood(dist::HistfactPDF, data::StatsBase.Histogram)  
     likelihood = LiteHF.pyhf_loglikelihoodof(dist.channel[1], data.weights)
     priors = LiteHF.pyhf_logpriorof(dist.prior)
-    return params -> likelihood([convert(Float64, params[x]) for x in dist.order]) + priors([convert(Float64, params[x]) for x in keys(dist.prior)])
+
+    a = Base.Fix1(_include_customs, dist)
+
+    return (params  -> begin 
+        params = a(params)
+        return likelihood([params[x] for x in keys(dist.order)]) + priors([convert(Float64, params[x]) for x in keys(dist.prior)]) 
+    end)
 end
     
+
+#@generated function _include_customs(order::Vector,customs::NamedTuple, params)
+#    params_expr = :(params)
+#    order_expr = :(order)
+#    customs_expr = :(customs)
+#    return :(($order_expr, $customs_expr, $params_expr) -> begin
+#        for x in $order_expr
+#            if haskey($customs_expr, x)
+#                nt = (;)
+#                for k in $customs_expr[x]
+#                    nt = merge_namedtuples(nt, (k => $params_expr[k],))
+#                end
+#                $params_expr = merge_namedtuples($params_expr, (x => nt,))
+#            end
+#        end
+#        return $params_expr
+#    end)
+#end
+
+function _include_customs(dist, params)
+        for x in dist.order
+            if haskey(dist.customs, x)
+                nt = (;)
+                for k in dist.customs[x]
+                    nt = merge(nt, (k => (params[k]),))
+                end
+                params = merge(params, (x => nt,))
+            end
+        end
+    return params
+end
+
 """
     make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::NamedTuple, data_specs::NamedTuple)
 
@@ -94,7 +132,7 @@ function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::Name
     if likelihood_spec.distributions !== nothing
         for i in 1:length(likelihood_spec.distributions)
             if typeof(functional_specs[Symbol(likelihood_spec.distributions[i])]) == HistFactorySpec
-                funct = make_histfact(functional_specs[Symbol(likelihood_spec.distributions[i])], Symbol(likelihood_spec.distributions[i]))
+                funct = make_histfact(functional_specs[Symbol(likelihood_spec.distributions[i])], Symbol(likelihood_spec.distributions[i]), functional_specs)
                 #free_parameters = push!(free_parameters, collect(keys(funct.prior)))
                 generated_dist = push!(generated_dist, funct)
             else

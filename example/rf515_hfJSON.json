@@ -69,6 +69,10 @@
                         {
                             "name": "mu",
                             "type": "normfactor"
+                        },
+                        {
+                            "name": "A1",
+                            "type": "custom"
                         }
                     ],
                     "name": "signal"
@@ -88,7 +92,6 @@
                             "type": "normsys"
                         },
                         {
-                            "constraint" : "Poisson",
                             "name": "mcstat",
                             "type": "staterror"
                         }
@@ -133,6 +136,18 @@
             ],
             "contents": [122, 112],
             "type": "binned"
+        }
+    ],
+    "functions" : [
+        {
+            "name": "A1",
+            "type": "generic_function",
+            "expression": "syst2  * syst3"
+        },
+        {
+            "name": "A2",
+            "type": "sum",
+            "summands": ["a", "v", "d_34"]
         }
     ]
 }
