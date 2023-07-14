@@ -30,5 +30,13 @@ module HS3
         include(joinpath("builders/", file))
     end
     include("Validator.jl")
+
+    function _precompile()
+        dict = file_to_dict("./example/precompile.json")
+        specs = generate_specs(dict)
+        #analysis = HS3.make_analyses(specs.analyses[1], specs)
+        @info "Precompilation done"
+    end
+    _precompile()
     #include("output/specs_to_dict.jl")
 end 

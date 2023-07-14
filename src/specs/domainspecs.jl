@@ -35,14 +35,22 @@ array = [
 
 specs = generate_domainspecs(Val(:product_domain), array)
 """
-
-function generate_domainspecs(::Val{:product_domain}, axes::AbstractArray)
-    nt = NamedTuple()
+function _create_domain_axes(axes::AbstractArray)
+    nt = (;)
     for element in axes
         temp = NamedTuple(filter(entry -> entry[1] != :name, element))
-        nt = merge(nt, (Symbol(element.name) => ProductDomainSpec(; temp...),))
+        nt = merge(nt, (Symbol(element.name) => ProductDomainSpec(temp...),))
     end
     return nt
+end
+
+function generate_domainspecs(::Val{:product_domain}, axes::AbstractArray)
+    chunks = Iterators.partition(axes, length((axes)) ÷ Threads.nthreads()+1)
+    tasks = map(chunks) do chunk
+        Threads.@spawn _create_domain_axes(chunk)
+    end
+    chunk_sums = fetch.(tasks)
+    return merge(chunk_sums...)
 end
 
 """

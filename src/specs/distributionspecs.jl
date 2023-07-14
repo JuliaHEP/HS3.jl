@@ -131,7 +131,7 @@ Generate distribution specifications by iterating over an array of distributions
 A named tuple containing the generated distribution specifications.
 
 """
-function generate_distributions_specs(dist_array::AbstractArray)
+function _create_distribution_specs(dist_array::AbstractArray)
     dist_specs = NamedTuple{}()
     for dist in dist_array
         dist_name = Symbol(dist.name)
@@ -139,4 +139,13 @@ function generate_distributions_specs(dist_array::AbstractArray)
         dist_specs = merge(dist_specs, (dist_name => dist_spec,),)
     end
     return dist_specs
+end 
+
+function generate_distributions_specs(dist_array::AbstractArray)
+    chunks = Iterators.partition(dist_array, length((dist_array)) ÷ Threads.nthreads()+1)
+    tasks = map(chunks) do chunk
+        Threads.@spawn _create_distribution_specs(chunk)
+    end
+    chunk_sums = fetch.(tasks)
+    return merge(chunk_sums...)
 end

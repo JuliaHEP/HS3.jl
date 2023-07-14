@@ -43,13 +43,22 @@ Generate parameter point specifications based on the provided array.
 A named tuple containing the generated parameter point specifications.
 
 """
-function parse_set_of_parameter_points(arr::AbstractArray)
+function _create_parameter_points_axes(arr::AbstractArray)
     specs = NamedTuple{}()
     for element in arr
         temp = NamedTuple(filter(entry -> entry[1] != :name, element))
         specs = merge(specs, (Symbol(element.name) => generate_parameterpoint_spec(temp),))
     end
     return specs
+end 
+
+function parse_set_of_parameter_points(arr::AbstractArray)
+    chunks = Iterators.partition(arr, length((arr)) ÷ Threads.nthreads()+1)
+    tasks = map(chunks) do chunk
+        Threads.@spawn _create_parameter_points_axes(chunk)
+    end
+    chunk_sums = fetch.(tasks)
+    return merge(chunk_sums...)
 end
 
 

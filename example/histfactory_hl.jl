@@ -1,19 +1,67 @@
 using HS3
 using BenchmarkTools, DensityInterface
 using JSON3
-
+using BAT
+a = Pair(1, 2)
+zip(a[1], a[2])
 
 dict = file_to_dict("./example/rf515_hfJSON.json")
 specs = HS3.generate_specs(dict)
-
 analysis = HS3.make_analyses(specs.analyses[1], specs)
-logdensityof(analysis.likelihood, (mcstat_bin1 =1, mu=1,  syst3 = 1, syst1 = 0, syst2 =1, mcstat_bin2 = 1))
 
+logdensityof(analysis.likelihood, (mcstat_bin1 =1, mu=1,  syst3 = 0.0, syst1 =1., syst2 =0, mcstat_bin2 = 1))
+
+
+[2, 2] .- [1, 1]
+
+
+
+r = Dict("a"=> [1.0, 2.0, 3.0], "b" => Dict("c" => 2.0),"c"=> [1.0, 2.0, 3.0], "d" => Dict("c" => 2.0))
+collect(Iterators.partition(r, length(keys(r)) ÷ Threads.nthreads()+1))
+length(keys(r))
+4 / 20
+typeof(("a", 2))
+length(keys(a)) ÷ Threads.nthreads()
+
+specs.distributions
+@benchmark HS3.generate_specs(dict)
+using ValueShapes, Distributions
+prior = NamedTupleDist((mcstat_bin1 =Normal(1, 1), mu=Uniform(-5, 5),  syst3 = Normal(), syst1 = Normal(), syst2 =Normal(), mcstat_bin2 = Normal(1,1)))
+posterior = PosteriorMeasure(analysis.likelihood, prior)
+a = bat_sample(posterior)
+a.result
+bat_findmode(posterior)
+logdensityof(analysis.likelihood, (mcstat_bin1 =1, mu=1,  syst3 = 0, syst1_bin1 = 1, syst1_bin2 = 0.5, syst2 =0, mcstat_bin2 = 1))
+
+x = [2.0, 2.2, 2.1, 1.5, -0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0, -1.1, -1.2, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]
+y = []
+for i  in x 
+y = push!(y, logdensityof(analysis.likelihood, (mcstat_bin1 =1, mu=1,  syst3 = 0, syst1 = i, syst2 =0, mcstat_bin2 = 1, a=1, b=1)))
+end
+y
+using Plots
+root = [21.447233, 21.8672333, 21.6522333, 20.5722333, 16.5444, 16.5958, 16.7019, 16.8853, 17.1633, 17.5399, 18.0017, 18.5219, 19.0736, 19.6513, 20.2824, 20.9782, 16.5292, 16.543459, 16.5934, 16.6970, 16.8764, 17.1487, 17.5180, 17.9708, 18.4808, 19.0213, 19.5869, 20.2046, 20.8856]
+
+vector = [0, 0, 0, 5, 3, 0, 9, 0]
+vector[findfirst(x -> x != 0, vector)]
+
+diff = (y.+root)
+plot(x, diff, seriestype=:scatter, label="abs. difference")
+savefig("histosys_abs_diff.pdf")
+plot(x, y, seriestype=:scatter, label="Julia")
+plot!(x, -root, seriestype=:scatter, label = "root")
+savefig("histosys_is_wrong.pdf")
+logdensityof(analysis.likelihood, (mcstat_bin1 =1, mu=1,  syst3 = 0, syst1 = 0.1, syst2 =0, mcstat_bin2 = 1, a=1, b=1))
+logdensityof(analysis.likelihood, (mcstat_bin1 =1, mu=1,  syst3 = 0, syst1_bin1 = 2, syst1_bin2 = 2, syst2 =0, mcstat_bin2 = 1, a=1, b=1))
+using Distributions
+a = Normal() * sqrt(2 * pi)
+pdf(a, -0.1) 
 HS3._find_variables_in_expression(specs[:functions][2])
 a = ((1, 2))
 function f(x, y)
     println(x+y)
 end
+sqrt(2)
 f(a...)
 
 

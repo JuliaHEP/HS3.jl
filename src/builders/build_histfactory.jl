@@ -115,21 +115,21 @@ Create and return a constraint object based on the specified distribution type.
 
 _make_constraint(::Val{:Gauss}, modifier::LiteHF.Normsys) =  Distributions.Normal(0, 1.)
 
-_make_constraint(::Val{:Gauss}, modifier::LiteHF.Histosys) = Distributions.Normal(0, 1) #(sum(modifier.interp.Δ_down .- modifier.interp.Δ_up) /2, sum(modifier.interp.Δ_up .+ modifier.interp.Δ_down) /2)
+_make_constraint(::Val{:Gauss}, modifier::LiteHF.Histosys) = Distributions.Normal(0, 1.)
 
-_make_constraint(::Val{:Gauss}, modifier::LiteHF.Shapesys) = Distributions.Normal(0, modifier.σn2)
+_make_constraint(::Val{:Gauss}, modifier::LiteHF.Shapesys) = Distributions.Normal(0, 1)
 
 _make_constraint(::Val{:Gauss}, modifier::LiteHF.Staterror) = Distributions.Normal(0, modifier.σ)
 
-#_make_constraint(::Val{:Poisson}, modifier::LiteHF.Normsys) = LiteHF.RelaxedPoisson(1. /((modifier.interp.f_up - modifier.interp.f_down)/2))
+_make_constraint(::Val{:Poisson}, modifier::LiteHF.Normsys) = LiteHF.RelaxedPoisson(1.)
 
-_make_constraint(::Val{:Poisson}, modifier::LiteHF.Histosys) = @warn "Not defined"
+_make_constraint(::Val{:Poisson}, modifier::LiteHF.Histosys) = LiteHF.RelaxedPoisson(1.)
 
-_make_constraint(::Val{:Poisson}, modifier::LiteHF.Shapesys) = LiteHF.RelaxedPoisson(sqrt(modifier.σn2/length(modifier.interp(0.0))))
+_make_constraint(::Val{:Poisson}, modifier::LiteHF.Shapesys) = LiteHF.RelaxedPoisson(modifier.moddata^2)
 
 _make_constraint(::Val{:Poisson}, modifier::LiteHF.Staterror) = LiteHF.RelaxedPoisson(modifier.σ^2)
 
-_make_constraint(::Val{:Const}, modifier::AbstractModifierSpec) = LiteHF.FlatPrior(0, 5)
+_make_constraint(::Val{:Const}, modifier::LiteHF.AbstractModifier) = LiteHF.FlatPrior(0, 0) # TODO: this needs improvement
 
 _make_constraint(::Any, ::Any) = @error "Not a valid entry and thus not defined"
 
@@ -238,9 +238,7 @@ A HistfactPDF object representing the constructed probability density function.
 
 function make_histfact(histfact_spec::HistFactorySpec, channel_name::Symbol, function_specs=(;))
     sample_arr, constraints, custom = make_sample_dict(histfact_spec.samples, function_specs)
-    println(custom)
     channel_dict = LiteHF.build_channel(Dict(:samples => sample_arr); misc=Dict())
-    println("here", channel_dict[:background2].nominal)
     modifier_names = unique!(reduce(vcat, [channel_dict[i].modifier_names for i in keys(channel_dict)]))
     channel = LiteHF.build_pyhfchannel((channel_name => channel_dict), modifier_names)
     
@@ -252,7 +250,7 @@ function make_histfact(histfact_spec::HistFactorySpec, channel_name::Symbol, fun
     #end
     constraint_terms = NamedTuple()
     for name in keys(channel[2])
-        if name in keys(constraints)
+        if (name in keys(constraints)) && (typeof(constraints[name]) != Val{:Const}) 
             constraint_terms = merge(constraint_terms, [name => _make_constraint(constraints[name], channel[2][name])])
         else
             #constraint_terms = merge(constraint_terms, [name => LiteHF._prior(channel[2][name])])

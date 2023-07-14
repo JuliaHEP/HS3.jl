@@ -81,16 +81,16 @@ Generate a single `HistFactorySampleSpec` object from a named tuple representing
 function generate_HistFactorySampleSpec(sample)
     modifier_specs = (;)
     for modifier in sample.modifiers
-        if haskey(modifier, :parameter) ###for ttW, Parameter sometimes replaces name in that file...
-            modifier_specs = merge(modifier_specs, (_val_content(modifier.parameter) => generate_ModifierSpec(modifier),))
-        else
-            modifier_specs = merge(modifier_specs, (_val_content(modifier.name) => generate_ModifierSpec(modifier),))
-        end
+        #if haskey(modifier, :parameter) ###for ttW, Parameter sometimes replaces name in that file...
+        #    modifier_specs = merge(modifier_specs, (_val_content(modifier.parameter) => generate_ModifierSpec(modifier),))
+        #else
+        modifier_specs = merge(modifier_specs, (_val_content(modifier.name) => generate_ModifierSpec(modifier),))
+        #end
     end
     if haskey(sample.data, :errors)
-        HistFactorySampleSpec(data = Vector(sample.data.contents), errors = Vector(sample.data.errors), modifiers = modifier_specs)
+        HistFactorySampleSpec(data = convert.(Float64, Vector(sample.data.contents)), errors = Vector(sample.data.errors), modifiers = modifier_specs)
     else
-        HistFactorySampleSpec(data = Vector(sample.data.contents), modifiers = modifier_specs)
+        HistFactorySampleSpec(data = convert.(Float64, Vector(sample.data.contents)), modifiers = modifier_specs)
     end
 end
 
@@ -130,7 +130,7 @@ Fields:
 - data::NamedTuple: The data associated with the modifier.
 """
 @with_kw struct HistosysSpec <: AbstractModifierSpec 
-    constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = nothing 
+    constraint::Union{Val{:Gauss}, Val{:Poisson}, Val{:LogNormal}, Val{:Const}, Nothing} = Val{:Gauss}() 
     data::NamedTuple
 end
 

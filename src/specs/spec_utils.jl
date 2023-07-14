@@ -12,8 +12,7 @@ Alternatively the path to the HS3 file might be directly passed to this function
 A named tuple containing the generated specifications for each component.
 
 """
-function generate_specs(spec_dict::AbstractDict)
-    spec_types = [
+const spec_types = [
         :analyses,
         :likelihoods,
         :distributions,
@@ -23,17 +22,32 @@ function generate_specs(spec_dict::AbstractDict)
         :domains,
         :metadata,
         :misc
-    ]
-    specs = NamedTuple()
-    for (key, value) in zip(keys(spec_dict), values(spec_dict))
+]
+
+function _gen_specs(spec_dict::Vector)
+    specs = (;)
+    for element in spec_dict
+        key = element[1]
+        value = element[2]
         if key in spec_types
+            @info "The specs of field $(key) are being made"
             spec_func = eval(Symbol("generate_$(key)_specs"))
             specs = merge(specs, [key => spec_func(value)])
+            @info "The specs of field $(key) have been made"
         else 
             @error "Specified top-level component $key not part of HS3!"
         end
     end
     return specs
+end
+
+function generate_specs(spec_dict::AbstractDict)
+    chunks = Iterators.partition(spec_dict, length(keys(spec_dict)) ÷ Threads.nthreads()+1)
+    tasks = map(chunks) do chunk
+        Threads.@spawn _gen_specs(chunk)
+    end
+    chunk_sums = fetch.(tasks)
+    return merge(chunk_sums...)
 end
 
 function generate_specs(path_to_file::String)
