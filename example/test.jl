@@ -3,6 +3,8 @@ example_dict = file_to_dict("./example/test.json")
 dict = file_to_dict("./example/test.json")
 specs = HS3.generate_specs(dict)
 analysis = HS3.make_analyses(specs.analyses[1], specs)
+a = logdensityof(analysis.likelihood, (param_c = -2, param_mean = 0, param_sigma =1))
+HS3.topological_sort(merge(specs.distributions, specs.functions))
 using DensityInterface
 a = logdensityof(analysis.likelihood)
 for expr in code
@@ -32,7 +34,6 @@ a = a.likelihood_functions.contents[1]
 
 
 
-a = logdensityof(analysis.likelihood, (param_c = -2, param_mean = 0, param_sigma =1))
 b = logdensityof(analysis.likelihood, (mu=1, syst2 =0, mcstat_bin2 = 1, syst1 = 0, syst3 = 0,  mcstat_bin1 =1))
 c = logdensityof(analysis.likelihood, (mu = -2.4, syst2 = -0.009487064624933319, mcstat_bin2 = 0.9999950810630367, syst1 = 0.9978812987492401, syst3 = 1.0719092640875414, mcstat_bin1 = 1.0000003487684337))
 

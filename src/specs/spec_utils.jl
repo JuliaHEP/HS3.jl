@@ -26,19 +26,23 @@ const spec_types = [
 
 function _gen_specs(spec_dict::Vector)
     specs = (;)
-    for element in spec_dict
-        key = element[1]
-        value = element[2]
-        if key in spec_types
-            @info "The specs of field $(key) are being made"
-            spec_func = eval(Symbol("generate_$(key)_specs"))
-            specs = merge(specs, [key => spec_func(value)])
-            @info "The specs of field $(key) have been made"
-        else 
-            @error "Specified top-level component $key not part of HS3!"
-        end
-    end
-    return specs
+    names = [element[1] for element in spec_dict]
+    specs = [eval(Symbol("generate_$(element[1])_specs"))(element[2]) for element in spec_dict]
+    @assert all(x -> x in spec_types, names)
+    #for element in spec_dict
+    #    key = element[1]
+    #    value = element[2]
+#
+    #    if key in spec_types
+    #        @info "The specs of field $(key) are being made"
+    #        spec_func = eval(Symbol("generate_$(key)_specs"))
+    #        specs = merge(specs, [key => spec_func(value)])
+    #        @info "The specs of field $(key) have been made"
+    #    else 
+    #        @error "Specified top-level component $key not part of HS3!"
+    #    end
+    #end
+    return (; zip(names, specs)...)
 end
 
 function generate_specs(spec_dict::AbstractDict)

@@ -60,11 +60,11 @@
                     "modifiers": [
                         {
                             "data": {
-                                "hi":{"contents": [1.05, 1.2]},
-                                "lo":{"contents": [0.95, 0.8]}
+                                "hi": 1.05,
+                                "lo": 0.95
                             },
                             "name": "syst1",
-                            "type": "histosys"
+                            "type": "normsys"
                         },
                         {
                             "name": "mu",

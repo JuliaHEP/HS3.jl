@@ -22,9 +22,9 @@ function make_analyses(ana_spec::AnalysesSpec, specs::NamedTuple)
     analyses = (likelihood = ll_nt,
         #parameter_domain = make_domain_ranges(specs[:domains][Symbol(ana_spec.parameter_domain)],)
     )
-    #if ana_spec.domains !== nothing
-    #    analyses = merge(analyses, (parameter_domain = make_domain_ranges(specs[:domains][Symbol(ana_spec.domains[1])]),))
-    #end
+    if ana_spec.domains !== nothing
+        analyses = merge(analyses, (parameter_domain = make_domain_ranges(specs[:domains][Symbol(ana_spec.domains[1])]),))
+    end
     if ana_spec.parameter_init !== nothing
         analyses = merge(analyses, (parameter_init = make_parameterpoints(specs[:parameter_points][Symbol(ana_spec.parameter_init)]),))
     end

@@ -26,7 +26,7 @@ Specification for binned data within HS3.
 """
 @with_kw struct BinnedDataSpec{N} <: AbstractDataSpec
     contents::AbstractArray{<:Number, 1} 
-    axes::NamedTuple{<:Any, <:Tuple{HS3.AxesSpec}}
+    axes::NamedTuple#NamedTuple{<:Any, <:Tuple{HS3.AxesSpec}}
     uncertainty::Union{Nothing, UncertaintySpec{N}} = nothing
 end
 
@@ -43,9 +43,9 @@ Constructs a `BinnedDataSpec` object based on the provided abstract dictionary.
 A `BinnedDataSpec` object representing the specified binned data.
 
 """
-function generate_binneddataspec(dict::AbstractDict)
+function generate_dataspec(dict::AbstractDict, ::Val{:binned})
     content_dict = Dict(filter(entry -> entry[1] ∉ [:type, :name], dict))
-    content_dict[:axes] = generate_axes_specs(dict[:axes])
+    content_dict[:axes] = (;)#generate_axes_specs(dict[:axes])
     haskey(content_dict, :uncertainty) ? content_dict[:uncertainty] = generate_uncertaintyspec(dict[:uncertainty]) : nothing
     temp = NamedTuple(content_dict)
     BinnedDataSpec{length(content_dict[:contents])}(; temp...)
@@ -70,7 +70,7 @@ Specification for unbinned data within the HS3 framework.
 @with_kw struct UnbinnedDataSpec{N} <: AbstractDataSpec 
     entries::AbstractArray{<:Number} 
     entries_errors::Union{Nothing, AbstractArray{<:Number}} = nothing 
-    axes::NamedTuple{<:Any, <:NTuple{N, AxesSpec}}
+    axes::NamedTuple#NamedTuple{<:Any, <:NTuple{N, AxesSpec}}
     weights::Union{AbstractArray{<:Number}, Nothing}  = nothing
 end
 
@@ -97,9 +97,9 @@ dict = Dict(
 
 spec = generate_unbinneddataspec(dict)
 """
-function generate_unbinneddataspec(dict::AbstractDict)
+function generate_dataspec(dict::AbstractDict, ::Val{:unbinned})
     content_dict = filter(entry -> entry[1] ∉ [:type, :name], dict)
-    content_dict[:axes] = generate_axes_specs(dict[:axes])
+    content_dict[:axes] = (;)#generate_axes_specs(dict[:axes])
     if haskey(dict, :entries_errors)
         @assert size(dict[:entries_errors]) == size(dict[:entries]) "Size/shape of entries_errors in unbinned data not correct"
         content_dict[:entries_errors] = reduce(vcat, dict[:entries_errors]')
@@ -141,7 +141,7 @@ Generate a `PointDataSpec` instance based on the provided dictionary.
 An `PointDataSpec` object representing the specified unbinned data.
 
 """
-function generate_pointdataspec(dict::AbstractDict)
+function generate_dataspec(dict::AbstractDict, ::Val{:point})
     content_dict = filter(entry -> entry[1] ∉ [:type, :name], dict)
     PointDataSpec(; NamedTuple(content_dict)...)
 end
@@ -173,17 +173,20 @@ specs = generate_data_specs(array)
 
 """
 function generate_data_specs(array::AbstractArray)
-    data_specs = NamedTuple()
-    for data_set in array 
-        if data_set.type == "unbinned"
-            data_specs = merge(data_specs, (Symbol(data_set.name) => generate_unbinneddataspec(data_set),))
-        elseif data_set.type == "binned"
-            data_specs = merge(data_specs, (Symbol(data_set.name) => generate_binneddataspec(data_set),)) 
-        elseif data_set.type == "point"
-            data_specs = merge(data_specs, (Symbol(data_set.name) => generate_pointdataspec(data_set),))
-        else
-            @warn "Specified type of data $(data_set.type) not part of HS3"
-        end
-    end
-    data_specs
+    #data_specs = NamedTuple()
+    names = [Symbol(data_set.name) for data_set in array]
+    specs = [generate_dataspec(data_set, Val(Symbol(data_set.type))) for data_set in array]
+    #for data_set in array 
+
+        #if data_set.type == "unbinned"
+        #    data_specs = merge(data_specs, (Symbol(data_set.name) => generate_unbinneddataspec(data_set),))
+        #elseif data_set.type == "binned"
+        #    data_specs = merge(data_specs, (Symbol(data_set.name) => generate_binneddataspec(data_set),)) 
+        #elseif data_set.type == "point"
+        #    data_specs = merge(data_specs, (Symbol(data_set.name) => generate_pointdataspec(data_set),))
+        #else
+        #    @warn "Specified type of data $(data_set.type) not part of HS3"
+        #end
+    #end
+    return (; zip(names, specs)...)
 end

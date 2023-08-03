@@ -40,9 +40,9 @@ Specification for a HistFactory sample.
 - `modifiers::NamedTuple`: Named tuple containing any modifiers for the sample.
 
 """
-@with_kw struct HistFactorySampleSpec <: AbstractHS3Spec
-    data::AbstractArray{<:Number}
-    errors::Union{AbstractArray{<:Number}, Nothing} = nothing 
+@with_kw struct HistFactorySampleSpec{T <: Real} <: AbstractHS3Spec
+    data::AbstractArray{T}
+    errors::Union{AbstractArray, Nothing} = nothing 
     modifiers::NamedTuple
 end
 
@@ -59,11 +59,14 @@ Generate multiple `HistFactorySampleSpec` objects from an array of samples.
 
 """
 function generate_HistFactorySampleSpecs(samples)
-    sample_specs = NamedTuple()
-    for sample in samples
-        sample_specs = merge(sample_specs, (_val_content(sample[:name]) => generate_HistFactorySampleSpec(sample),))
-    end
-    return sample_specs
+    #sample_specs = NamedTuple()
+    names = [_val_content(sample[:name]) for sample in samples]
+    sample_specs = [generate_HistFactorySampleSpec(sample) for sample in samples]
+    #for sample in samples
+    #    sample_specs = merge(sample_specs, (_val_content(sample[:name]) => generate_HistFactorySampleSpec(sample),))
+    #end
+    #return sample_specs
+    return (; zip(names, sample_specs)...)
 end
 
 """
@@ -80,13 +83,16 @@ Generate a single `HistFactorySampleSpec` object from a named tuple representing
 """
 function generate_HistFactorySampleSpec(sample)
     modifier_specs = (;)
-    for modifier in sample.modifiers
-        #if haskey(modifier, :parameter) ###for ttW, Parameter sometimes replaces name in that file...
-        #    modifier_specs = merge(modifier_specs, (_val_content(modifier.parameter) => generate_ModifierSpec(modifier),))
-        #else
-        modifier_specs = merge(modifier_specs, (_val_content(modifier.name) => generate_ModifierSpec(modifier),))
-        #end
-    end
+    #for modifier in sample.modifiers
+    #    #if haskey(modifier, :parameter) ###for ttW, Parameter sometimes replaces name in that file...
+    #    #    modifier_specs = merge(modifier_specs, (_val_content(modifier.parameter) => generate_ModifierSpec(modifier),))
+    #    #else
+    #    modifier_specs = merge(modifier_specs, (_val_content(modifier.name) => generate_ModifierSpec(modifier),))
+    #    #end
+    #end
+    modifier_names = [_val_content(modifier.name) for modifier in sample.modifiers]
+    m_specs = [generate_ModifierSpec(modifier) for modifier in sample.modifiers]
+    modifier_specs = (; zip(modifier_names, m_specs)...)
     if haskey(sample.data, :errors)
         HistFactorySampleSpec(data = convert.(Float64, Vector(sample.data.contents)), errors = Vector(sample.data.errors), modifiers = modifier_specs)
     else

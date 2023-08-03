@@ -2,7 +2,7 @@
     "distributions": [
         {
             "name": "sig1",
-            "mean": "param_mean",
+            "mean": "func1",
             "sigma" : "param_sigma",
             "type": "normal_dist",
             "x": "x_1"
@@ -29,12 +29,8 @@
     "functions": [
         {
             "name" : "func1",
-            "type" : "sum",
-            "summands" : [
-                1,
-                2,
-                "test_abc"
-            ]
+            "type" : "generic_function",
+            "expression" : "1+ test_abc * 3"
         },
         {
             "name" : "test_abc",

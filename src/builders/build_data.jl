@@ -50,8 +50,15 @@ function make_data(spec::PointDataSpec)
     spec.value
 end
 
+@with_kw struct UnbinnedData 
+    entries::AbstractArray
+    entries_errors::Union{AbstractArray, Nothing} = nothing 
+    axes::NamedTuple
+    weights::Union{AbstractArray, Nothing} = nothing 
+end
+
 function make_data(spec::UnbinnedDataSpec)
-    @warn "Unbinned data not yet implemented" 
+    return UnbinnedData((; spec...))
 end
 
 
@@ -68,9 +75,7 @@ Create datasets from the given data specifications.
 
 """
 function make_datas(data_specs::NamedTuple)
-    datasets = NamedTuple()
-    for (k, v) in zip(keys(data_specs), data_specs)
-        datasets = merge(datasets, (Symbol(k) => make_data(v),))
-    end
-    datasets
+    names = [Symbol(name) for name in keys(data_specs)]
+    sets = [make_data(set) for set in data_specs]
+    (; zip(names, sets)...)
 end

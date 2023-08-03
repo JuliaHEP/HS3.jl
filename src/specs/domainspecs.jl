@@ -9,9 +9,9 @@ Domain specification representing a product domain in HS3.
 - `max::Number`: The maximum value of the domain.
 - `min::Number`: The minimum value of the domain.
 """
-@with_kw struct ProductDomainSpec <: AbstractHS3Spec
-    max::Number
-    min::Number 
+@with_kw struct ProductDomainSpec{T <: Real, S <: Real} <: AbstractHS3Spec
+    max::T
+    min::S 
 end
 
 """
@@ -35,23 +35,34 @@ array = [
 
 specs = generate_domainspecs(Val(:product_domain), array)
 """
-function _create_domain_axes(axes::AbstractArray)
-    nt = (;)
-    for element in axes
-        temp = NamedTuple(filter(entry -> entry[1] != :name, element))
-        nt = merge(nt, (Symbol(element.name) => ProductDomainSpec(temp...),))
-    end
-    return nt
+function generate_domainspecs(::Val{:product_domain}, axes::AbstractArray)
+    #nt = (;)
+    names = [Symbol(element.name) for element in axes]
+    specs = [ProductDomainSpec(element.max, element.min) for element in axes]
+    #for element in axes
+    #    #if !occursin("gamma_shape_stat", element.name)
+    #     #   if occursin("gamma_stat_CombReco_bin", element.name)
+    #            bin_number = match(r"bin_(\d+)$", element.name).captures[1]
+    #            new_name = "staterror_bin$(bin_number)"
+    #            temp = NamedTuple(filter(entry -> entry[1] != :name, element))
+    #            nt = merge(nt, (Symbol(new_name) => ProductDomainSpec(temp...),))
+    #        else
+    #            temp = NamedTuple(filter(entry -> entry[1] != :name, element))
+    #            nt = merge(nt, (Symbol(element.name) => ProductDomainSpec(temp...),))
+    #        end
+    #    end
+    #end
+    return (; zip(names, specs)...)
 end
 
-function generate_domainspecs(::Val{:product_domain}, axes::AbstractArray)
-    chunks = Iterators.partition(axes, length((axes)) ÷ Threads.nthreads()+1)
-    tasks = map(chunks) do chunk
-        Threads.@spawn _create_domain_axes(chunk)
-    end
-    chunk_sums = fetch.(tasks)
-    return merge(chunk_sums...)
-end
+#function generate_domainspecs(::Val{:product_domain}, axes::AbstractArray)
+#    chunks = Iterators.partition(axes, length((axes)) ÷ Threads.nthreads()+1)
+#    tasks = map(chunks) do chunk
+#        Threads.@spawn _create_domain_axes(chunk)
+#    end
+#    chunk_sums = fetch.(tasks)
+#    return merge(chunk_sums...)
+#end
 
 """
     generate_domains_specs(domain_array::AbstractArray)
@@ -77,9 +88,11 @@ specs = generate_domains_specs(domain_array)
 """
 
 function generate_domains_specs(domain_array::AbstractArray)
-    specs = NamedTuple()
-    for domain in domain_array
-        specs = merge(specs, (Symbol(domain.name) => generate_domainspecs(Val(Symbol(domain.type)), domain.axes),))
-    end
-    specs
+    names = [Symbol(domain.name) for domain in domain_array]
+    specs = [generate_domainspecs(Val(Symbol(domain.type)), domain.axes) for domain in domain_array]
+    #for domain in domain_array
+    #    specs = merge(specs, (Symbol(domain.name) => generate_domainspecs(Val(Symbol(domain.type)), domain.axes),))
+    #end
+    #println("here")
+    return (; zip(names, specs)...)
 end

@@ -74,9 +74,9 @@ Struct representing the specification of axes in the HS3 framework.
 
 All fields default are optional and default to `nothing`.
 """
-@with_kw struct AxesSpec <: AbstractHS3Spec
-    max::Union{Number, Nothing} = nothing
-    min::Union{Number, Nothing} = nothing 
+@with_kw struct AxesSpec{T <: Real, S <: Real} <: AbstractHS3Spec
+    max::Union{T, Nothing} = nothing
+    min::Union{S, Nothing} = nothing 
     nbins::Union{Integer, Nothing} = nothing
 end
 
@@ -99,12 +99,15 @@ specs = generate_axes_specs(axes_data)
 """
 
 function generate_axes_specs(axes_array)
-    specs = NamedTuple{}()
-    for element in axes_array
-        temp = NamedTupleTools.delete(_typed_content(element), :name)
-        specs = merge(specs, (Symbol(_val_content(element.name)) => AxesSpec(; temp...),),)
-    end
-    return specs
+    #specs = NamedTuple{}()
+    #for element in axes_array
+    #    temp = NamedTupleTools.delete(_typed_content(element), :name)
+    #    specs = merge(specs, (Symbol(_val_content(element.name)) => AxesSpec(; temp...),),)
+    #end
+    #return specs
+    names = [Symbol(_val_content(element.name)) for element in axes_array]
+    specs = [AxesSpec(; NamedTupleTools.delete(_typed_content(element), :name)... ) for element in axes_array]
+    return (; zip(names, specs)...)
 end
 
 

@@ -27,6 +27,16 @@ function generate_likelihood(dist, data::StatsBase.Histogram)
     return params -> likelihood(params)
 end
 
+function generate_likelihood(dist, data::UnbinnedData)  
+    likelihood = function (params)
+        lpdf = 0.0
+        for i in 1:length(data.weights)
+            lpdf += Distributions.logpdf(Distributions.Poisson(Distributions.pdf(dist(params), data.entries[i][1])), data.weights[i])
+        end
+        return lpdf
+    end
+    return params -> likelihood(params)
+end
 
 """
     generate_likelihood(dist)
@@ -66,12 +76,15 @@ A likelihood function.
 """   
 function generate_likelihood(dist::HistfactPDF, data::StatsBase.Histogram)  
     likelihood = LiteHF.pyhf_loglikelihoodof(dist.channel[1], convert.(Float64, data.weights))
+    @info likelihood
     priors = LiteHF.pyhf_logpriorof(dist.prior)
 
-    a = Base.Fix1(_include_customs, dist)
+    custom = Base.Fix1(_include_customs, dist)
+    
     return (params  -> begin 
-        params = a(params)
-        return likelihood([convert(Float64, params[x]) for x in dist.order]) + priors([convert(Float64, params[x]) for x in keys(dist.prior)]) 
+        params = custom(params)
+        return likelihood([params[x] for x in dist.order]) + priors([params[x] for x in keys(dist.prior)])
+        #return likelihood([params[x] for x in dist.order]) #+ priors([params[x] for x in keys(dist.prior)]) 
     end)
 end
     
@@ -101,7 +114,9 @@ function _include_customs(dist, params)
                 for k in dist.customs[x]
                     nt = merge(nt, (k => (params[k]),))
                 end
-                params = merge(params, (x => nt,))
+                #if !haskey(params, x)
+                    params = merge(params, (x => nt,))
+                #end
             end
         end
     return params

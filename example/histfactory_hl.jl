@@ -9,7 +9,86 @@ dict = file_to_dict("./example/rf515_hfJSON.json")
 specs = HS3.generate_specs(dict)
 analysis = HS3.make_analyses(specs.analyses[1], specs)
 
-logdensityof(analysis.likelihood, (mcstat_bin1 =1, mu=1,  syst3 = 0.0, syst1 =1., syst2 =0, mcstat_bin2 = 1))
+logdensityof(analysis.likelihood, (mcstat_bin1 =1, mu=1,  syst3 = 1.0, syst1 =1., syst2 =1, mcstat_bin2 = 1))
+
+a = NamedTupleDist((mcstat_bin1 =Uniform(0, 2), mu=(-5..5),  syst3 = Uniform(-5, 5), syst1 =Uniform(-5, 5), syst2 =Uniform(-5, 5), mcstat_bin2 = Uniform(0, 2)))
+posterior = PosteriorMeasure(analysis.likelihood, a)
+set_batcontext(ad = ADModule(:ForwardDiff))
+bat_mode_result = bat_findmode(posterior, OptimAlg(optalg = Optim.NelderMead()))
+bat_mode = bat_mode_result.result
+
+import ForwardDiff
+using AutoDiffOperators
+set_batcontext(ad = ADModule(:ForwardDiff))
+bat_mode_result = bat_findmode(posterior, OptimAlg(optalg = Optim.NelderMead()))
+bat_mode = bat_mode_result.result
+
+# Sample with BAT.jl and plot the result
+sampling_result = bat_sample(posterior, MCMCSampling(nsteps=Int(1e6), nchains=4))
+
+samples = sampling_result.result
+
+evm = EvaluatedMeasure(posterior, samples=sampling_result.result)
+bat_report(evm)
+using Plots
+plot(samples)
+
+using BAT
+using Plots 
+using Distributions
+using IntervalSets
+using DensityInterface
+using ValueShapes
+using StatsBase
+using Optim
+
+function get_smallest_interval_edges(
+    samples::DensitySampleVector,
+    key::Union{Symbol,Real},
+    p::Real;
+    bins=200,
+    atol=0.0)
+
+    marg = BAT.MarginalDist(samples, key, bins=bins)
+
+    marghist = convert(Histogram, marg.dist)
+    hist_p = BAT.get_smallest_intervals(marghist, [p])[1][1]
+
+    lower, upper = BAT.get_interval_edges(hist_p, atol=atol)
+    return (lower=lower, upper=upper)
+end
+
+plot(samples, 2, bins=400)
+get_smallest_interval_edges(samples, 2, 0.6895, bins=400, atol=0.2)
+
+using ProfileLikelihood 
+#docu: https://danielvandh.github.io/ProfileLikelihood.jl/dev/
+
+# make the BAT posterior compatible with ProfileLikelihood.jl
+llikelihood = logdensityof(unshaped(posterior.likelihood))
+loglik(x, data) = llikelihood(x)
+names = collect(keys(varshape(posterior)))
+
+using Optimization
+using OptimizationOptimJL
+
+x0 = [1., 1., 0.1, 0.1, 0.1, 1.] # starting value for the minimization
+# create ProfileLikelihood problem
+problem = LikelihoodProblem(loglik, x0, syms=names, f_kwargs=(adtype=Optimization.AutoForwardDiff(),))
+
+# Maximum likelihood estimate (should be same result as bat_findmode)
+sol = mle(problem, Optim.NelderMead() ) # use Optim.NelderMead() to not use gradient information
+fieldnames(typeof(sol))
+sol.mle
+# Profiling
+lower_bounds = posterior.prior.bounds.vol.lo
+upper_bounds = posterior.prior.bounds.vol.hi
+resolutions = [200, 200, 200, 200, 200, 200] # one entry for each parameter
+
+param_ranges = construct_profile_ranges(sol, lower_bounds, upper_bounds, resolutions)
+
+prof = profile(problem, sol; conf_level=0.683, param_ranges, parallel=true)
+
 
 
 [2, 2] .- [1, 1]

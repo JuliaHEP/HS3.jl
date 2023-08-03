@@ -8,8 +8,8 @@ A specification for a single parameter point in a parameter space.
 - `isconst`: A boolean flag indicating if the parameter is constant (default: `false`).
 
 """
-@with_kw struct ParameterPointSpec <: AbstractHS3Spec
-    value::Number
+@with_kw struct ParameterPointSpec{T <: Real} <: AbstractHS3Spec
+    value::T
     isconst::Bool = false 
 end
 
@@ -44,22 +44,25 @@ A named tuple containing the generated parameter point specifications.
 
 """
 function _create_parameter_points_axes(arr::AbstractArray)
-    specs = NamedTuple{}()
-    for element in arr
-        temp = NamedTuple(filter(entry -> entry[1] != :name, element))
-        specs = merge(specs, (Symbol(element.name) => generate_parameterpoint_spec(temp),))
-    end
-    return specs
+    #specs = NamedTuple{}()
+    #for element in arr
+    #    temp = NamedTuple(filter(entry -> entry[1] != :name, element))
+    #    specs = merge(specs, (Symbol(element.name) => generate_parameterpoint_spec(temp),))
+    #end
+    #return specs
+    names = [Symbol(element.name) for element in arr]
+    specs = [generate_parameterpoint_spec(NamedTuple(filter(entry -> entry[1] != :name, element))) for element in arr]
+    return (; zip(names, specs)...)
 end 
 
-function parse_set_of_parameter_points(arr::AbstractArray)
-    chunks = Iterators.partition(arr, length((arr)) ÷ Threads.nthreads()+1)
-    tasks = map(chunks) do chunk
-        Threads.@spawn _create_parameter_points_axes(chunk)
-    end
-    chunk_sums = fetch.(tasks)
-    return merge(chunk_sums...)
-end
+#function parse_set_of_parameter_points(arr::AbstractArray)
+#    chunks = Iterators.partition(arr, length((arr)) ÷ Threads.nthreads()+1)
+#    tasks = map(chunks) do chunk
+#        Threads.@spawn _create_parameter_points_axes(chunk)
+#    end
+#    chunk_sums = fetch.(tasks)
+#    return merge(chunk_sums...)
+#end
 
 
 """
@@ -74,9 +77,13 @@ A named tuple containing the generated parameter point specifications.
 
 """
 function generate_parameter_points_specs(param_array::AbstractArray)
-    specs = NamedTuple()
-    for param_set in param_array
-        specs = merge(specs, (Symbol(param_set.name) => parse_set_of_parameter_points(param_set.parameters, ),))
-    end
-    specs
+    #specs = NamedTuple()
+    #for param_set in param_array
+    #    specs = merge(specs, (Symbol(param_set.name) => parse_set_of_parameter_points(param_set.parameters, ),))
+    #end
+    #specs
+    names = [Symbol(param_set.name) for param_set in param_array]
+    specs = [_create_parameter_points_axes(param_set.parameters, ) for param_set in param_array]
+    #println(typeof(specs))
+    return (; zip(names, specs)...)
 end

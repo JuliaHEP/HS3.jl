@@ -85,9 +85,11 @@ specs = generate_likelihoods_specs(arr)
 
 """
 function generate_likelihoods_specs(arr::AbstractArray)
-    specs = NamedTuple()
-    for element in arr
-        specs = merge(specs, (Symbol(element.name) => generate_likelihoodspec(element),))
-    end
-    specs
+    names = [Symbol(element.name) for element in arr]
+    specs = [generate_likelihoodspec(element) for element in arr]
+    #for element in arr
+    #    specs = merge(specs, (Symbol(element.name) => generate_likelihoodspec(element),))
+    #end
+    #specs
+    (; zip(names, specs)...)
 end

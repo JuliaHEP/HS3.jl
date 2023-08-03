@@ -73,7 +73,7 @@ spec = generate_functionspec(Val(:sum), data)
 """
 generate_functionspec(::Val{:sum}, data::NamedTuple) = FunctionSpec{:sum}((summands = data.summands,))
 
-generate_functionspec(::Val{:prod}, data::NamedTuple) = FunctionSpec{:prod}((factors = data.factors,))
+generate_functionspec(::Val{:product}, data::NamedTuple) = FunctionSpec{:product}((factors = data.factors,))
 
 # in order for the generic function to work with the topological sorting algorithm the variables need to be extracted
 generate_functionspec(::Val{:generic_function}, data::NamedTuple) = FunctionSpec{:generic_function}((expression = Meta.parse(String(_val_content(data.expression))), var = _typed_content([_find_variables_in_expression(Meta.parse(String(_val_content(data.expression))))...]), ))
@@ -100,10 +100,13 @@ func_specs = generate_functions_specs(func_data)
 
 """
 function generate_functions_specs(spec_array::AbstractArray)
-    specs = NamedTuple{}()
-    for func_data in spec_array
-        name = Symbol(func_data.name)
-        specs = merge(specs, (name => parse_and_generate_functionspec(func_data),))
-    end
-    specs
+    names = [Symbol(func.name) for func in spec_array]
+    specs = [parse_and_generate_functionspec(func) for func in spec_array]
+    return (; zip(names, specs)...)
+    #specs = NamedTuple{}()
+    #for func_data in spec_array
+    #    name = Symbol(func_data.name)
+    #    specs = merge(specs, (name => parse_and_generate_functionspec(func_data),))
+    #end
+    #specs
 end

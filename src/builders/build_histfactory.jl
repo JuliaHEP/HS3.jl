@@ -79,9 +79,14 @@ function make_modifier_dict(sample::HistFactorySampleSpec, abs_staterror_data::N
         else
             sorted = topological_sort(function_specs)
             func = make_functional(function_specs[Symbol(mod_name)], sorted)
-
             #TODO: Account for non generic functions
             parameter_names = _val_content(collect(function_specs[Symbol(mod_name)].params.var))
+            for i in function_specs 
+                if typeof(i) == FunctionSpec{:generic_function}
+                    parameter_names = append!(parameter_names, _val_content(collect(i.params.var)))
+                end
+            end
+            #@info parameter_names
             mod_dict = Dict(:type=> "custom", :data =>(params -> func(params), parameter_names) , :name => mod_name)
             mod_arr = push!(mod_arr, mod_dict)
             custom = merge(custom, (mod_name => parameter_names,))
@@ -129,7 +134,7 @@ _make_constraint(::Val{:Poisson}, modifier::LiteHF.Shapesys) = LiteHF.RelaxedPoi
 
 _make_constraint(::Val{:Poisson}, modifier::LiteHF.Staterror) = LiteHF.RelaxedPoisson(modifier.σ^2)
 
-_make_constraint(::Val{:Const}, modifier::LiteHF.AbstractModifier) = LiteHF.FlatPrior(0, 0) # TODO: this needs improvement
+_make_constraint(::Val{:Const}, modifier::LiteHF.AbstractModifier) = LiteHF.FlatPrior(1, 1) # TODO: this needs improvement
 
 _make_constraint(::Any, ::Any) = @error "Not a valid entry and thus not defined"
 

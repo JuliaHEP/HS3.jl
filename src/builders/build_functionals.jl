@@ -89,7 +89,6 @@ function make_functional(spec::AbstractFunctionalSpec, sorted_functionals::Vecto
     for funct in reverse(sorted_functionals) 
         functionals = merge(functionals, (first(last(funct)) => make_functional(funct[2][2]), ))
     end
-    
     funct = make_functional(spec)
     return params -> begin
         for (k, v) in zip(keys(functionals), functionals)
@@ -99,6 +98,26 @@ function make_functional(spec::AbstractFunctionalSpec, sorted_functionals::Vecto
         funct(merge(functionals, params))
     end
 end
+
+function make_functional(spec::FunctionSpec{:generic_function}, sorted_functionals::Vector, level::Int64=0)
+    functionals = NamedTuple()
+    vars = spec.params.var
+    sorted_functionals = filter(x -> x[1] > level, sorted_functionals)
+    for funct in reverse(sorted_functionals) 
+        if funct in vars 
+            functionals = merge(functionals, (first(last(funct)) => make_functional(funct[2][2]), ))
+        end
+    end
+    funct = make_functional(spec)
+    return params -> begin
+        for (k, v) in zip(keys(functionals), functionals)
+            (typeof(v) <: Number) && break
+            functionals = merge(functionals, (k => v(merge(functionals, params)),))
+        end
+        funct(merge(functionals, params))
+    end
+end
+
 
 make_functional(spec::AbstractDistributionSpec) = generate_distribution ∘ Base.Fix1(substitute_variables, spec)
 

@@ -42,11 +42,11 @@ spec = DistributionSpec{:gaussian_dist}((mean = 0.0, sigma = 1.0), (x = [1, 2, 3
 """
 
 
-struct DistributionSpec{disttype, P<:NamedTuple, T<:NamedTuple} <: AbstractDistributionSpec
+struct DistributionSpec{disttype, P<:NamedTuple} <: AbstractDistributionSpec
     params::P
 end
 
-DistributionSpec{disttype}(params::P) where {disttype, P<:NamedTuple} = DistributionSpec{disttype,P,typeof((;))}(params)
+DistributionSpec{disttype}(params::P) where {disttype, P<:NamedTuple} = DistributionSpec{disttype,P}(params)
 
 
 """
@@ -131,21 +131,24 @@ Generate distribution specifications by iterating over an array of distributions
 A named tuple containing the generated distribution specifications.
 
 """
-function _create_distribution_specs(dist_array::AbstractArray)
-    dist_specs = NamedTuple{}()
-    for dist in dist_array
-        dist_name = Symbol(dist.name)
-        dist_spec = parse_and_generate_distributionspec(dist)
-        dist_specs = merge(dist_specs, (dist_name => dist_spec,),)
-    end
-    return dist_specs
+function generate_distributions_specs(dist_array::AbstractArray)
+    #dist_specs = NamedTuple{}()
+    #for dist in dist_array
+    #    dist_name = Symbol(dist.name)
+    #    dist_spec = parse_and_generate_distributionspec(dist)
+    #    dist_specs = merge(dist_specs, (dist_name => dist_spec,),)
+    #end
+    #return dist_specs
+    names = [dist.name for dist in dist_array]
+    specs = [parse_and_generate_distributionspec(dist) for dist in dist_array]
+    (; zip(names, specs)...)
 end 
 
-function generate_distributions_specs(dist_array::AbstractArray)
-    chunks = Iterators.partition(dist_array, length((dist_array)) ÷ Threads.nthreads()+1)
-    tasks = map(chunks) do chunk
-        Threads.@spawn _create_distribution_specs(chunk)
-    end
-    chunk_sums = fetch.(tasks)
-    return merge(chunk_sums...)
-end
+#function generate_distributions_specs(dist_array::AbstractArray)
+#    chunks = Iterators.partition(dist_array, length((dist_array)) ÷ Threads.nthreads()+1)
+#    tasks = map(chunks) do chunk
+#        Threads.@spawn _create_distribution_specs(chunk)
+#    end
+#    chunk_sums = fetch.(tasks)
+#    return merge(chunk_sums...)
+#end
