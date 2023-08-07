@@ -20,12 +20,12 @@ function make_data(spec::BinnedDataSpec)
     number_of_bins =  length(spec.contents) 
     min = 0
     max = number_of_bins 
-    if spec.axes[1].max !== nothing 
-        max = spec.axes[1].max 
-    end
-    if spec.axes[1].min !== nothing 
-        min = spec.axes[1].min 
-    end
+    #if spec.axes[1].max !== nothing 
+    #    max = spec.axes[1].max 
+    #end
+    #if spec.axes[1].min !== nothing 
+    #    min = spec.axes[1].min 
+    #end
     step = (max - min)/number_of_bins
     bins = range(min, stop = max, step=step)
     v = collect(spec.contents)

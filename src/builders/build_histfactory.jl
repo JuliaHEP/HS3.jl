@@ -261,6 +261,7 @@ function make_histfact(histfact_spec::HistFactorySpec, channel_name::Symbol, fun
             #constraint_terms = merge(constraint_terms, [name => LiteHF._prior(channel[2][name])])
         end
     end
+    @info constraint_terms
     HistfactPDF(channel, constraint_terms, modifier_names, custom)
 end
 

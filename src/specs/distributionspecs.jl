@@ -139,7 +139,7 @@ function generate_distributions_specs(dist_array::AbstractArray)
     #    dist_specs = merge(dist_specs, (dist_name => dist_spec,),)
     #end
     #return dist_specs
-    names = [dist.name for dist in dist_array]
+    names = [Symbol(dist.name) for dist in dist_array]
     specs = [parse_and_generate_distributionspec(dist) for dist in dist_array]
     (; zip(names, specs)...)
 end 

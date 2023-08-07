@@ -86,10 +86,6 @@
                             },
                             "name": "syst2",
                             "type": "normsys"
-                        },
-                        {
-                            "name": "mcstat",
-                            "type": "staterror"
                         }
                     ],
                     "name": "background1"
@@ -102,28 +98,17 @@
                     "modifiers": [
                         {
                             "data": {
-                                "hi": 1.05,
-                                "lo": 0.95
+                                "hi": {"contents": [1.5, 1.2]},
+                                "lo": {"contents" : [0.95, 0.8]}
                             },
                             "name": "syst3",
-                            "type": "normsys"
-                        },
-                        {
-                            "name": "mcstat",
-                            "type": "staterror"
+                            "type": "histosys"
                         }
                     ],
                     "name": "background2"
                 }
             ],
             "type": "histfactory_dist"
-        },
-        {
-            "type" : "normal_dist",
-            "mean" : "a",
-            "sigma": "A1",
-            "name" : "some_gaussian",
-            "x": "obs_x_channel1"
         }
     ],
     "data": [
@@ -139,18 +124,6 @@
             ],
             "contents": [122.0, 112.0],
             "type": "binned"
-        }
-    ],
-    "functions" : [
-        {
-            "name": "A1",
-            "type": "generic_function",
-            "expression": "a+b"
-        },
-        {
-            "name": "A2",
-            "type": "sum",
-            "summands": ["a", "v", "d_34"]
         }
     ]
 }

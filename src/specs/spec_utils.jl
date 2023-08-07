@@ -25,7 +25,6 @@ const spec_types = [
 ]
 
 function _gen_specs(spec_dict::Vector)
-    specs = (;)
     names = [element[1] for element in spec_dict]
     specs = [eval(Symbol("generate_$(element[1])_specs"))(element[2]) for element in spec_dict]
     @assert all(x -> x in spec_types, names)
