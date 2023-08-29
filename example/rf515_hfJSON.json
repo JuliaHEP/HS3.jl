@@ -59,14 +59,6 @@
                     },
                     "modifiers": [
                         {
-                            "data": {
-                                "hi": 1.05,
-                                "lo": 0.95
-                            },
-                            "name": "syst1",
-                            "type": "normsys"
-                        },
-                        {
                             "name": "mu",
                             "type": "normfactor"
                         }
@@ -75,34 +67,29 @@
                 },
                 {
                     "data": {
-                        "contents": [100, 0],
-                        "errors": [5, 0]
+                        "contents": [100, 80],
+                        "errors": [5, 8]
                     },
                     "modifiers": [
                         {
-                            "data": {
-                                "hi": 1.05,
-                                "lo": 0.95
-                            },
-                            "name": "syst2",
-                            "type": "normsys"
+                            "name": "shapestat",
+                            "type": "shapesys",
+                            "constraint": "Poisson",
+                            "data": {"vals": [1.2, 1.0]}
                         }
                     ],
                     "name": "background1"
                 },
                 {
                     "data": {
-                        "contents": [0, 100],
+                        "contents": [100, 100],
                         "errors": [0, 10]
                     },
                     "modifiers": [
                         {
-                            "data": {
-                                "hi": {"contents": [1.5, 1.2]},
-                                "lo": {"contents" : [0.95, 0.8]}
-                            },
-                            "name": "syst3",
-                            "type": "histosys"
+                            "constraint" : "Const",
+                            "type": "shapesys",
+                            "name": "shapestat"
                         }
                     ],
                     "name": "background2"
@@ -124,6 +111,13 @@
             ],
             "contents": [122.0, 112.0],
             "type": "binned"
+        }
+    ],
+    "functions": [
+        {
+            "name":"mu2",
+            "type": "generic_function",
+            "expression": "2+a1"
         }
     ]
 }

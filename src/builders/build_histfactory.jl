@@ -29,17 +29,29 @@ Create a dictionary representation of a given `modifier` object usable for the L
 A dictionary representing the input `modifier` object.
 
 """
-make_dict_from_modifier(modifier::NormfactorSpec, sample::HistFactorySampleSpec, abs_staterror_data::Number) = Dict(:type => "normfactor", :data => nothing)
+make_dict_from_modifier(modifier::NormfactorSpec, sample::HistFactorySampleSpec, abs_staterror_data::Tuple{Vector{Float64}, Vector{Float64}}) = Dict(:type => "normfactor", :data => nothing)
 
-make_dict_from_modifier(modifier::NormsysSpec, sample::HistFactorySampleSpec, abs_staterror_data::Number) = Dict(:type => "normsys", :data => Dict(:hi => modifier.data.hi, :lo => modifier.data.lo))
+make_dict_from_modifier(modifier::NormsysSpec, sample::HistFactorySampleSpec, abs_staterror_data::Tuple{Vector{Float64}, Vector{Float64}}) = Dict(:type => "normsys", :data => Dict(:hi => modifier.data.hi, :lo => modifier.data.lo))
 
-function make_dict_from_modifier(modifier::StaterrorSpec, sample::HistFactorySampleSpec, abs_staterror_data::Number) 
-    @assert sample.errors !== nothing
-    Dict(:type => "staterror", :data =>  sample.errors * abs_staterror_data)
+function make_dict_from_modifier(modifier::StaterrorSpec, sample::HistFactorySampleSpec, abs_staterror_data::Tuple{Vector{Float64}, Vector{Float64}}) 
+    @assert length(abs_staterror_data[2]) == length(abs_staterror_data[1])
+    ##@info abs_staterror_data
+    ##abs_staterror_data = 100.
+    #@info sample.errors
+    #@info abs_staterror_data
+    σ = copy(abs_staterror_data[1])
+    for i in 1:length(abs_staterror_data[1]) 
+        if abs_staterror_data[2][i] != 0
+            σ[i] = abs_staterror_data[1][i] / abs_staterror_data[2][i]
+        else 
+            σ[i] = sqrt(abs_staterror_data[1][i])
+        end 
+    end
+    Dict(:type => "staterror", :data =>  σ)
 end
-make_dict_from_modifier(modifier::HistosysSpec, sample::HistFactorySampleSpec, abs_staterror_data::Number) = Dict(:type => "histosys", :data => Dict(:hi_data => modifier.data.hi.contents, :lo_data => modifier.data.lo.contents))
+make_dict_from_modifier(modifier::HistosysSpec, sample::HistFactorySampleSpec, abs_staterror_data::Tuple{Vector{Float64}, Vector{Float64}}) = Dict(:type => "histosys", :data => Dict(:hi_data => modifier.data.hi.contents, :lo_data => modifier.data.lo.contents))
 
-function make_dict_from_modifier(modifier::ShapesysSpec, sample::HistFactorySampleSpec, abs_staterror_data::Number)
+function make_dict_from_modifier(modifier::ShapesysSpec, sample::HistFactorySampleSpec, abs_staterror_data::Tuple{Vector{Float64}, Vector{Float64}})
     if modifier.data === nothing 
         data = zeros(length(sample.data))
     else 
@@ -48,9 +60,9 @@ function make_dict_from_modifier(modifier::ShapesysSpec, sample::HistFactorySamp
     Dict(:type => "shapesys", :data => data)
 end 
 
-make_dict_from_modifier(modifier::ShapefactorSpec, sample::HistFactorySampleSpec, abs_staterror_data::Number) = Dict(:type => "shapefactor", :data => modifier.data)
+make_dict_from_modifier(modifier::ShapefactorSpec, sample::HistFactorySampleSpec, abs_staterror_data::Tuple{Vector{Float64}, Vector{Float64}}) = Dict(:type => "shapefactor", :data => modifier.data)
 
-make_dict_from_modifier(modifier::CustomModifierSpec, sample::HistFactorySampleSpec, abs_staterror_data::Number) = Dict(:type => "custom", :data => nothing)
+make_dict_from_modifier(modifier::CustomModifierSpec, sample::HistFactorySampleSpec, abs_staterror_data::Tuple{Vector{Float64}, Vector{Float64}}) = Dict(:type => "custom", :data => nothing)
 
 #TODO check this
 
@@ -67,35 +79,44 @@ Create a modifier dictionary for LiteHF.jl and constraint dictionary from a Hist
 - `constraints`: A dictionary mapping modifier names to their constraints, if specified.
 
 """
-function make_modifier_dict(sample::HistFactorySampleSpec, abs_staterror_data::Number, function_specs::NamedTuple)
+function make_modifier_dict(sample::HistFactorySampleSpec, abs_staterror_data::Tuple{Vector{Float64}, Vector{Float64}}, function_specs::NamedTuple)
     constraints = NamedTuple()
     mod_arr = []
     custom = (;)
+    sorted = topological_sort(function_specs)
+    custom_parameter_names = []
+    custom_mod_name = [] #TODO here better stuff ends to go
     for (mod_name, mod) in zip(keys(sample.modifiers), sample.modifiers)
-        if typeof(mod) != CustomModifierSpec 
-            mod_dict = make_dict_from_modifier(mod, sample, abs_staterror_data)
-            mod_dict[:name] = String(mod_name)
-            mod_arr = push!(mod_arr, mod_dict)
-        else
-            sorted = topological_sort(function_specs)
-            func = make_functional(function_specs[Symbol(mod_name)], sorted)
-            #TODO: Account for non generic functions
-            parameter_names = _val_content(collect(function_specs[Symbol(mod_name)].params.var))
-            for i in function_specs 
-                if typeof(i) == FunctionSpec{:generic_function}
-                    parameter_names = append!(parameter_names, _val_content(collect(i.params.var)))
+        for element in mod 
+            #@info element
+            if typeof(element) != CustomModifierSpec 
+                mod_dict = make_dict_from_modifier(element, sample, abs_staterror_data)
+                mod_dict[:name] = String(mod_name)
+                mod_arr = push!(mod_arr, mod_dict)
+            else
+                func = make_functional(function_specs[Symbol(mod_name)], sorted)
+                #TODO: Account for non generic functions
+                parameter_names = _val_content(collect(function_specs[Symbol(mod_name)].params.var))
+                for i in function_specs 
+                    if typeof(i) == FunctionSpec{:generic_function}
+                        parameter_names = append!(parameter_names, _val_content(collect(i.params.var)))
+                    end
                 end
+                #@info parameter_names
+                mod_dict = Dict(:type=> "custom", :data =>(params -> func(params), parameter_names) , :name => mod_name)
+                mod_arr = push!(mod_arr, mod_dict)
+                custom_parameter_names = push!(custom_parameter_names, parameter_names)
+                custom_mod_name = push!(custom_mod_name, mod_name)
+                #custom = merge(custom, (mod_name => parameter_names,))
             end
-            #@info parameter_names
-            mod_dict = Dict(:type=> "custom", :data =>(params -> func(params), parameter_names) , :name => mod_name)
-            mod_arr = push!(mod_arr, mod_dict)
-            custom = merge(custom, (mod_name => parameter_names,))
+            if :constraint ∈ fieldnames(typeof(element)) && element.constraint !== nothing
+                #constraint_names = push!(constraint_names, mod_dict[name])
+                constraints = merge(constraints, [Symbol(mod_dict[:name]) => element.constraint,])
+            end 
         end
-        if :constraint ∈ fieldnames(typeof(mod)) && mod.constraint !== nothing
-            constraints = merge(constraints, [Symbol(mod_dict[:name]) => mod.constraint,])
-        end 
     end
-    mod_arr, constraints, custom
+    #@info constraints
+    mod_arr, constraints, (; zip(custom_mod_name, custom_parameter_names)...)
 end
 
 
@@ -122,7 +143,12 @@ _make_constraint(::Val{:Gauss}, modifier::LiteHF.Normsys) =  Distributions.Norma
 
 _make_constraint(::Val{:Gauss}, modifier::LiteHF.Histosys) = Distributions.Normal(0, 1.)
 
-_make_constraint(::Val{:Gauss}, modifier::LiteHF.Shapesys) = Distributions.Normal(0, 1)
+function _make_constraint(::Val{:Gauss}, modifier::LiteHF.Shapesys) 
+    #@info "Shapesys: " sqrt(modifier.σn2) modifier.moddata
+    #@info (modifier.σn2)
+    #@info (modifier.moddata)
+    Distributions.Normal(0 , 1/sqrt(modifier.moddata))
+end
 
 _make_constraint(::Val{:Gauss}, modifier::LiteHF.Staterror) = Distributions.Normal(0, modifier.σ)
 
@@ -130,11 +156,13 @@ _make_constraint(::Val{:Poisson}, modifier::LiteHF.Normsys) = LiteHF.RelaxedPois
 
 _make_constraint(::Val{:Poisson}, modifier::LiteHF.Histosys) = LiteHF.RelaxedPoisson(1.)
 
-_make_constraint(::Val{:Poisson}, modifier::LiteHF.Shapesys) = LiteHF.RelaxedPoisson(modifier.moddata^2)
+_make_constraint(::Val{:Poisson}, modifier::LiteHF.Shapesys) = LiteHF.RelaxedPoisson(Float64(modifier.moddata))
 
-_make_constraint(::Val{:Poisson}, modifier::LiteHF.Staterror) = LiteHF.RelaxedPoisson(modifier.σ^2)
+_make_constraint(::Val{:Poisson}, modifier::LiteHF.Staterror) = LiteHF.RelaxedPoisson(Float64(modifier.σ^2))
 
-_make_constraint(::Val{:Const}, modifier::LiteHF.AbstractModifier) = LiteHF.FlatPrior(1, 1) # TODO: this needs improvement
+#_make_constraint(::Val{:Const}, modifier::LiteHF.AbstractModifier) = LiteHF.FlatPrior(1, 1) # TODO: this needs improvement
+
+#_make_constraint(::Val{:Const}, modifier::LiteHF.Shapesys) = LiteHF.RelaxedPoisson(0.)# TODO: this needs improvement
 
 _make_constraint(::Any, ::Any) = @error "Not a valid entry and thus not defined"
 
@@ -142,14 +170,49 @@ _make_constraint(::Any, ::Any) = @error "Not a valid entry and thus not defined"
 
 
 function _calc_staterror_data(samples::NamedTuple)
-    count = 0.0 
+    data = zero(samples[1].data)
+    errors = zero(samples[1].data)
     for sample in samples
-        if any(mod -> typeof(mod) == StaterrorSpec, sample.modifiers)
-            count += sum(sample.data)
+        for mods in values(sample.modifiers)
+            if any(mod -> typeof(mod) == StaterrorSpec, mods)
+                data .+= (sample.data)
+                errors .+= (sample.errors).^2 
+            end
         end
     end
-    count
+    @assert length(data) == length(errors)
+    data, sqrt.(errors)
 end
+
+function merge_constraints(nt1::NamedTuple, nt2::NamedTuple, mod_arr::AbstractArray)
+    pairs_to_merge = Pair{Symbol, Any}[]  # An array to hold pairs we want to merge
+
+    # Start with the entries in nt1
+    for (k, v) in pairs(nt1)
+        push!(pairs_to_merge, k => v)
+    end
+
+    # Then consider the entries in nt2
+    for (k, v) in pairs(nt2)
+        if haskey(nt1, k) 
+            # If the key already exists in nt1 and its value is Val{:P}
+            if nt1[k] == Val{:Poisson}() && v == Val{:Const}()
+                # Skip this pair
+                mod_arr = filter(dict -> dict[:name] != String(k), mod_arr)
+                continue
+            end
+        end
+        # Either add a new key or update an existing one
+        idx = findfirst(p -> p.first == k, pairs_to_merge)
+        if idx === nothing
+            push!(pairs_to_merge, k => v)
+        else
+            pairs_to_merge[idx] = k => v
+        end
+    end
+    return NamedTupleTools.namedtuple(pairs_to_merge), mod_arr
+end
+
 """
 make_sample_dict(samples)
 
@@ -172,8 +235,9 @@ function make_sample_dict(samples::NamedTuple, function_specs::NamedTuple)
         sample_dict =  Dict(key => getfield(sample, key) for key ∈ fieldnames(HistFactorySampleSpec))
         sample_dict[:name] = sample_name   
         mod_arr, temp_constraints, temp_custom = make_modifier_dict(sample, abs_staterror_data, function_specs)
+        #println(temp_constraints)
         custom = merge(custom, temp_custom)
-        constraints = merge(constraints, temp_constraints)
+        constraints, mod_arr = merge_constraints(constraints, temp_constraints, mod_arr)
         sample_dict[:modifiers] = mod_arr
         sample_arr  = push!(sample_arr, sample_dict)
     end
@@ -212,9 +276,11 @@ function _bin_wise_modifier_contraints(constraints::NamedTuple, constraint_param
     for element in constraint_parameters
         if match(pattern, string(element)) !== nothing
             name = Symbol(replace(string(element), pattern => s""))
+            #println(constraints)
             (constraints[name] !== nothing) ? nt = merge(nt, (Symbol(element) => constraints[name],)) : nothing
         end
     end
+    #println(constraints, constraint_parameters)
     return merge(constraints, nt)
 end
 
@@ -246,7 +312,7 @@ function make_histfact(histfact_spec::HistFactorySpec, channel_name::Symbol, fun
     channel_dict = LiteHF.build_channel(Dict(:samples => sample_arr); misc=Dict())
     modifier_names = unique!(reduce(vcat, [channel_dict[i].modifier_names for i in keys(channel_dict)]))
     channel = LiteHF.build_pyhfchannel((channel_name => channel_dict), modifier_names)
-    
+    #println(dump(channel[1]))
     @assert length(modifier_names) == length(keys(channel[2])) #sanity check
     #println("Here", constraints)
     #if constraints != (;)
@@ -261,7 +327,7 @@ function make_histfact(histfact_spec::HistFactorySpec, channel_name::Symbol, fun
             #constraint_terms = merge(constraint_terms, [name => LiteHF._prior(channel[2][name])])
         end
     end
-    @info constraint_terms
+    #@info constraint_terms
     HistfactPDF(channel, constraint_terms, modifier_names, custom)
 end
 

@@ -78,7 +78,7 @@ function generate_likelihood(dist::HistfactPDF, data::StatsBase.Histogram)
     likelihood = LiteHF.pyhf_loglikelihoodof(dist.channel[1], convert.(Float64, data.weights))
     priors = LiteHF.pyhf_logpriorof(dist.prior)
     custom = Base.Fix1(_include_customs, dist)
-    
+    @info ((dist.prior))
     return (params  -> begin 
         params = custom(params)
         return likelihood([params[x] for x in dist.order]) + priors([params[x] for x in keys(dist.prior)])

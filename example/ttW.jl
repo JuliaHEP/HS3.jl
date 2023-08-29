@@ -2,9 +2,20 @@ using HS3
 using BenchmarkTools
 using DensityInterface
 
-dict = file_to_dict("/net/e4-nfs-home.e4.physik.tu-dortmund.de/home/rpelkner/Documents/ttW/models/ttW_inclusive_2_nJets.json")
+dict = file_to_dict("/net/e4-nfs-home.e4.physik.tu-dortmund.de/home/rpelkner/Documents/ttW_diff-asym_DPhill_SS.json")
 
 @elapsed specs = HS3.generate_specs(dict)
+analysis = HS3.make_analyses(specs.analyses.simPdf_obsData, specs)
+using Random
+analysis.likelihood
+#logdensityof(analysis.likelihood, rand(NamedTupleDist(a)))
+using NamedTupleTools
+a = delete(a, :staterror_bin52)
+logdensityof(analysis.likelihood, (a))
+a = merge(h, blinded)
+a = merge(a, (Lumi = 1.,))
+analysis.likelihood
+specs.distributions.model_CR_HFel_2lSS_MM_lepPt1_2jincl_1b.samples.FakeMuLead_Medium.modifiers.FakesMuLead_PLIV_SVLongSignif
 @elapsed a = HS3.generate_domains_specs(dict[:domains])
 @elapsed data = HS3.generate_data_specs(dict[:data])
 @elapsed functions = HS3.generate_functions_specs(dict[:functions])
@@ -14,16 +25,18 @@ dict = file_to_dict("/net/e4-nfs-home.e4.physik.tu-dortmund.de/home/rpelkner/Doc
 @elapsed dists = HS3.generate_distributions_specs(dict[:distributions])
 specs
 specs.domains
+l = [0.8632603441351486, 0.8900055786751355, 1.008779038081359, 1.2194997057067491, 0.9879044444100515, 1.012340960385593, 1.1676631638668744, 1.1537579419773842, 0.1407917501570567, 0.1455940436231445, 0.16091393579448052, 0.16177764661775934, 0.1837543018071854, 0.22861811759424167, 0.2405370122999833, 0.2736034092301505, 0.2594943949405995, 0.28258377552727654, 0.3842129124904289, 0.34713984985073565, 0.12290518896700167, 0.1571347314745957, 0.12311814083986596, 0.15596910475673892, 0.18466848023244886, 0.22011490206555062, 0.7748175122351363, 0.8644722471012506, 1.0732560548182855, 1.1156558285520908, 0.9464930766517953, 1.0144806818096435, 1.2393677133462961, 1.2094150708096663, 0.1520844075477267, 0.1789500785186177, 0.12300436521035367, 0.17317351421005342, 0.20929563812500152, 0.27136914158637176, 0.245017299540409, 0.2380796370147264, 0.2634532809094603, 0.283664733689202, 0.3316157580172222, 0.35832547829587025, 0.12511051232910475, 0.13567885916496028, 0.14355801232723608, 0.15010567030372488, 0.13765810239749346, 0.17105715414675704]
+l =  [0.0, 0.0, 0.0, 0.5342207869629692, 1.1584410547939474, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0021464802742894385, 3.5981806539077272, 0.0, 0.0, 0.0, 0.0, 0.004260597542960938, 6.0172319206787845, 0.0, 0.0, 0.0, 0.0, 0.0, 3.080092189795308, 0.002643388517055127, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+length(l)
 @benchmark HS3.generate_specs(dict)
 ll_spec = specs.likelihoods[1]
 functional_specs  = merge(specs.distributions, specs.functions)
 data_specs = specs.data
 likelihood = HS3.make_likelihood(ll_spec, functional_specs, data_specs)
-analysis = HS3.make_analyses(specs.analyses[2], specs)
-logdensityof(analysis.likelihood, (a))
-blinded = NamedTupleDist(analysis.parameter_domain)
-a = merge(h, blinded)
-a = merge(a, (Lumi = 1.0,))
+
+analysis.likelihood
+
+length(a)
 a = NamedTuple(a)
 a = (;)
 a
@@ -45,6 +58,10 @@ set_batcontext(ad = ADModule(:ForwardDiff), autodiff = :forward)
 #bat_mode_result = bat_findmode(posterior, OptimAlg(optalg = Optim.ParticleSwarm()))
 bat_mode_result2 = bat_findmode(posterior, OptimAlg(optalg = Optim.NelderMead()))
 bat_mode = bat_mode_result2.result
+sample = bat_sample(posterior)
+using Plots
+plot(sample.samples)
+
 keys(analysis)
  9287.508 / 3754.843689889635 
 j = analysis.parameter_domain
@@ -263,7 +280,7 @@ using NamedTupleTools
 function generate_namedtuple()
     #names_stat = [Symbol("staterror_bin$(i)") for i in 1:52]
     names_shape = [Symbol("shape_stat_bin$(i)") for i in 1:52]
-    values = [1.0 for i in 1:52]
+    values = [Uniform(0.8, 1.2) for i in 1:52]
     return namedtuple(names_shape, values)
 end
 h = generate_namedtuple()

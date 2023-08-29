@@ -8,11 +8,48 @@ zip(a[1], a[2])
 dict = file_to_dict("./example/rf515_hfJSON.json")
 @elapsed specs = HS3.generate_specs(dict)
 analysis = HS3.make_analyses(specs.analyses[1], specs)
+#b = logdensityof(analysis.likelihood, (mu=1,  syst3_bin1 = 5, syst3_bin2 = 5,  syst1 =0., syst2 =0, mcstat_bin1 = 1, mcstat_bin2 = 1))
 
-logdensityof(analysis.likelihood, (mu=1,  syst3 = 5, syst1 =0., syst2 =0))
+b = logdensityof(analysis.likelihood, (mu=1., shapestat_bin1=1., shapestat_bin2=1.))
+#d = logdensityof(analysis.likelihood, (mu=1., syst1 =0.1, syst2 =1, syst3 =0.5, mcstat_bin1 = 1., mcstat_bin2 = 1.))
+b-d
+sqrt(sum([100, 0].^2))
+x = LinRange(0, 1, 100)
+c(x) = logdensityof(analysis.likelihood, (mu=1, syst1 =x, syst2 =0, mcstat_bin1 = 1., mcstat_bin2 = 1.))
+y = []
+for e in x 
+    push!(y, c(e))
+end
+using Plots
+
+using LiteHF
+plot(x, y)
+a = LiteHF.RelaxedPoisson(2.)
+using Distributions
+logpdf(a, Inf)
+logpdf(a, -2)
+
+b =Poisson(100)
+logpdf(b, 200)
+
+
+
+logpdf(a, 100)
+
+log(100.) -100 -  logpdf(a, 1)
+using LiteHF, Distributions
+l = LiteHF.binidentity(2, 1)
+
+l(1)
+identity(2)
+b*2
 using ValueShapes
 using Distributions
+a = Normal(1, 1)
+256.33491936369 - 2 * pdf(a, 5)
+specs.distributions[1].samples.background2.modifiers
 
+b +  pdf(a, 1)
 import ForwardDiff
 using AutoDiffOperators
 using Optim

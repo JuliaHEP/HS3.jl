@@ -82,7 +82,7 @@ Generate a single `HistFactorySampleSpec` object from a named tuple representing
 
 """
 function generate_HistFactorySampleSpec(sample)
-    modifier_specs = (;)
+    #modifier_specs = (;)
     #for modifier in sample.modifiers
     #    #if haskey(modifier, :parameter) ###for ttW, Parameter sometimes replaces name in that file...
     #    #    modifier_specs = merge(modifier_specs, (_val_content(modifier.parameter) => generate_ModifierSpec(modifier),))
@@ -90,9 +90,44 @@ function generate_HistFactorySampleSpec(sample)
     #    modifier_specs = merge(modifier_specs, (_val_content(modifier.name) => generate_ModifierSpec(modifier),))
     #    #end
     #end
-    modifier_names = [_val_content(modifier.name) for modifier in sample.modifiers]
-    m_specs = [generate_ModifierSpec(modifier) for modifier in sample.modifiers]
-    modifier_specs = (; zip(modifier_names, m_specs)...)
+    #modifier_names = [Symbol(_val_content(modifier.name)) for modifier in sample.modifiers]
+    m_specs = Dict{Symbol, Vector}()
+    for modifier in sample.modifiers
+        if haskey(m_specs, Symbol(_val_content(modifier.name)))
+            m_specs[Symbol(_val_content(modifier.name))] = append!(m_specs[Symbol(_val_content(modifier.name))], [generate_ModifierSpec(modifier)] )
+        else
+            m_specs[Symbol(_val_content(modifier.name))] = AbstractModifierSpec[generate_ModifierSpec(modifier)]
+        end
+    end
+    #m_specs = [generate_ModifierSpec(modifier) for modifier in sample.modifiers]
+    # Step 1: Create an empty dictionary
+    #mod_dict = Dict{Symbol, Vector{AbstractModifierSpec}}()
+
+    #unique_names = unique(modifier_names)
+    #values = [[m_specs[i] for i in findall(==(name), modifier_names)] for name in unique_names]
+    #println(values)
+    #arrays = Dict(n => Vector{AbstractModifierSpec}() for n in unique_names)
+    #for (n, m) in zip(modifier_names, m_specs)
+    #    push!(arrays[n], m)
+    #end
+    # #Step 2: Populate the dictionary with names and modifiers
+    #for (n, m) in zip(modifier_names, m_specs)
+    #    if haskey(mod_dict, n)
+    #        push!(mod_dict[n], m)
+    #    else
+    #        mod_dict[n] = [m]
+    #    end
+    #end
+    #for (n, m) in zip(modifier_names, m_specs)
+    #    push!(mod_dict[n], m)
+    #end
+    ## Step 3: Convert the dictionary to a named tuple
+    #modifier_specs = NamedTupleTools.namedtuple(mod_dict)#
+    #modifier_specs = (; zip((unique_names), values)...) #NamedTuple{Tuple(keys(mod_dict))}(values(mod_dict))
+    #println(typeof(m_specs))
+    modifier_specs = NamedTupleTools.namedtuple(m_specs)
+    #modifier_specs = (; zip(modifier_names, m_specs)...)
+    
     if haskey(sample.data, :errors)
         HistFactorySampleSpec(data = convert.(Float64, Vector(sample.data.contents)), errors = Vector(sample.data.errors), modifiers = modifier_specs)
     else
