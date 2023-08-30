@@ -78,7 +78,7 @@ generate_functionspec(::Val{:product}, data::NamedTuple) = FunctionSpec{:product
 # in order for the generic function to work with the topological sorting algorithm the variables need to be extracted
 generate_functionspec(::Val{:generic_function}, data::NamedTuple) = FunctionSpec{:generic_function}((expression = Meta.parse(String(_val_content(data.expression))), var = _typed_content([_find_variables_in_expression(Meta.parse(String(_val_content(data.expression))))...]), ))
 
-
+generate_functionspec(::Val{:interpolation0d}, data::NamedTuple) = FunctionSpec{:interpolation0d}((codes = data.interpolationCodes, high = data.high, low= data.low, nom = data.nom, vars = data.vars,))
 """
     generate_functions_specs(spec_array::AbstractArray)
 

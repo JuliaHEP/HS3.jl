@@ -84,22 +84,28 @@ An executeable functional representation of the specification.
 """
 
 function make_functional(spec::AbstractFunctionalSpec, sorted_functionals::Vector, level::Int64 = 0)
-    functionals = NamedTuple()
-    sorted_functionals = filter(x -> x[1] > level, sorted_functionals)
-    for funct in reverse(sorted_functionals) 
-        functionals = merge(functionals, (first(last(funct)) => make_functional(funct[2][2]), ))
-    end
-    funct = make_functional(spec)
     return params -> begin
-        for (k, v) in zip(keys(functionals), functionals)
-            (typeof(v) <: Number) && break
-            functionals = merge(functionals, (k => v(merge(functionals, params)),))
+        functionals = NamedTuple()
+        sorted_functionals = filter(x -> x[1] > level, sorted_functionals)
+        for funct in reverse(sorted_functionals) 
+            functionals = merge(functionals, (first(last(funct)) => make_functional(funct[2][2], sorted_functionals, level+1)(params), ))
         end
-        funct(merge(functionals, params))
+        #println("hereeee: ", functionals)
+        funct = make_functional(spec)
+        #println(zip((first.(last.(sorted_functionals))), functionals))
+        params = merge(params, zip((first.(last.(sorted_functionals))), functionals))
+        #println("bla ", sorted_functionals)
+        #for (k, v) in zip(keys(functionals), functionals)
+        #    println(functionals)
+        #    (typeof(v) <: Number) && break
+        #    functionals = merge(functionals, (k => v(params),))
+        #end
+        #@info (funct, " what ", level, " ", funct(merge(functionals, params)))
+        funct((params))
     end
 end
 
-function make_functional(spec::FunctionSpec{:generic_function}, sorted_functionals::Vector, level::Int64=0)
+function make_functional(spec::Union{FunctionSpec{:generic_function}} , sorted_functionals::Vector, level::Int64=0)
     functionals = NamedTuple()
     vars = spec.params.var
     sorted_functionals = filter(x -> x[1] > level, sorted_functionals)
