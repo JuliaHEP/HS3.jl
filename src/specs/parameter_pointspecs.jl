@@ -32,6 +32,8 @@ generate_parameterpoint_spec(nt::NamedTuple{(:value,), <:Tuple{Number}}) = Param
 
 generate_parameterpoint_spec(nt::NamedTuple{(:value, :const), <:Tuple{Number, Integer}}) = ParameterPointSpec(value = nt.value, isconst = nt[:const]) 
 
+generate_parameterpoint_spec(nt::Any) = ParameterPointSpec(value = nt.value, isconst = true)
+
 """
     parse_set_of_parameter_points(arr::AbstractArray)
 Generate parameter point specifications based on the provided array.
@@ -43,16 +45,18 @@ Generate parameter point specifications based on the provided array.
 A named tuple containing the generated parameter point specifications.
 
 """
-function _create_parameter_points_axes(arr::AbstractArray)
+function _create_parameter_points_axes(arr::Union{AbstractArray, Nothing})
     #specs = NamedTuple{}()
     #for element in arr
     #    temp = NamedTuple(filter(entry -> entry[1] != :name, element))
     #    specs = merge(specs, (Symbol(element.name) => generate_parameterpoint_spec(temp),))
     #end
     #return specs
-    names = [Symbol(element.name) for element in arr]
-    specs = [generate_parameterpoint_spec(NamedTuple(filter(entry -> entry[1] != :name, element))) for element in arr]
-    return (; zip(names, specs)...)
+    if arr !== nothing
+        names = [Symbol(element.name) for element in arr]
+        specs = [generate_parameterpoint_spec(NamedTuple(filter(entry -> entry[1] != :name, element))) for element in arr]
+        return (; zip(names, specs)...)
+    else return (;) end
 end 
 
 #function parse_set_of_parameter_points(arr::AbstractArray)

@@ -93,10 +93,16 @@ function generate_HistFactorySampleSpec(sample)
     #modifier_names = [Symbol(_val_content(modifier.name)) for modifier in sample.modifiers]
     m_specs = Dict{Symbol, Vector}()
     for modifier in sample.modifiers
-        if haskey(m_specs, Symbol(_val_content(modifier.name)))
-            m_specs[Symbol(_val_content(modifier.name))] = append!(m_specs[Symbol(_val_content(modifier.name))], [generate_ModifierSpec(modifier)] )
+        name = nothing
+        if haskey(modifier, :parameter)
+            name = modifier.parameter
         else
-            m_specs[Symbol(_val_content(modifier.name))] = AbstractModifierSpec[generate_ModifierSpec(modifier)]
+            name = modifier.name 
+        end
+        if haskey(m_specs, Symbol(_val_content(name)))
+            m_specs[Symbol(_val_content(name))] = append!(m_specs[Symbol(_val_content(name))], [generate_ModifierSpec(modifier)] )
+        else
+            m_specs[Symbol(_val_content(name))] = AbstractModifierSpec[generate_ModifierSpec(modifier)]
         end
     end
     #m_specs = [generate_ModifierSpec(modifier) for modifier in sample.modifiers]
@@ -195,7 +201,9 @@ NormfactorSpec <: AbstractModifierSpec
 
 A type representing a normalization factor modifier specification in the HistFactory framework.
 """
-struct NormfactorSpec <: AbstractModifierSpec end
+@with_kw struct NormfactorSpec <: AbstractModifierSpec 
+    constraint_name::Any = nothing 
+end
 
 
 struct CustomModifierSpec <: AbstractModifierSpec end
@@ -242,7 +250,7 @@ Returns:
 """
 function generate_ModifierSpec(nt::NamedTuple)
     tp = nt.type
-    nt = NamedTupleTools.delete(nt, (:type, :name, :constraint_name, :parameter)) #for now
+    nt = NamedTupleTools.delete(nt, (:type, :name,  :parameter)) #for now
     generate_ModifierSpec(tp, nt)
 end
 

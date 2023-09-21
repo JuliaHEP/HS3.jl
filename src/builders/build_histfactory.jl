@@ -96,10 +96,21 @@ function make_modifier_dict(sample::HistFactorySampleSpec, abs_staterror_data::T
             else
                 func = make_functional(function_specs[Symbol(mod_name)], sorted)
                 #TODO: Account for non generic functions
-                parameter_names = _val_content(collect(function_specs[Symbol(mod_name)].params.var))
+                parameter_names = []
+                if typeof(function_specs[Symbol(mod_name)]) == FunctionSpec{:generic_function}
+                    parameter_names = _val_content(collect(function_specs[Symbol(mod_name)].params.var))
+                elseif typeof(function_specs[Symbol(mod_name)]) == FunctionSpec{:interpolation0d}
+                    println("yes ", parameter_names)
+                    parameter_names = _val_content(collect(function_specs[Symbol(mod_name)].params.vars))
+                    println(parameter_names)
+                    #sleep(10)
+                end
+                #println(parameter_names)
                 for i in function_specs 
                     if typeof(i) == FunctionSpec{:generic_function}
                         parameter_names = append!(parameter_names, _val_content(collect(i.params.var)))
+                    elseif typeof(i) == FunctionSpec{:interpolation0d}
+                        parameter_names = append!(parameter_names, _val_content(collect(i.params.vars)))
                     end
                 end
                 #@info parameter_names
@@ -112,6 +123,11 @@ function make_modifier_dict(sample::HistFactorySampleSpec, abs_staterror_data::T
             if :constraint ∈ fieldnames(typeof(element)) && element.constraint !== nothing
                 #constraint_names = push!(constraint_names, mod_dict[name])
                 constraints = merge(constraints, [Symbol(mod_dict[:name]) => element.constraint,])
+            end 
+            if :constraint_name ∈ fieldnames(typeof(element)) && element.constraint_name !== nothing
+                #constraint_names = push!(constraint_names, mod_dict[name])
+                #@info "----------------------------------------HEEERREEEEE -------------------------------"
+                constraints = merge(constraints, [Symbol(mod_dict[:name]) => function_specs[Symbol(_val_content(element.constraint_name))],])
             end 
         end
     end
@@ -163,6 +179,7 @@ _make_constraint(::Val{:Poisson}, modifier::LiteHF.Staterror) = LiteHF.RelaxedPo
 #_make_constraint(::Val{:Const}, modifier::LiteHF.AbstractModifier) = LiteHF.FlatPrior(1, 1) # TODO: this needs improvement
 
 #_make_constraint(::Val{:Const}, modifier::LiteHF.Shapesys) = LiteHF.RelaxedPoisson(0.)# TODO: this needs improvement
+_make_constraint(dist::Any, modfier::LiteHF.Normfactor) = Distributions.truncated(Distributions.Normal(1, dist.params.sigma), 0, 10)
 
 _make_constraint(::Any, ::Any) = @error "Not a valid entry and thus not defined"
 
@@ -309,6 +326,7 @@ A HistfactPDF object representing the constructed probability density function.
 
 function make_histfact(histfact_spec::HistFactorySpec, channel_name::Symbol, function_specs=(;))
     sample_arr, constraints, custom = make_sample_dict(histfact_spec.samples, function_specs)
+    #println(constraints)
     channel_dict = LiteHF.build_channel(Dict(:samples => sample_arr); misc=Dict())
     modifier_names = unique!(reduce(vcat, [channel_dict[i].modifier_names for i in keys(channel_dict)]))
     channel = LiteHF.build_pyhfchannel((channel_name => channel_dict), modifier_names)

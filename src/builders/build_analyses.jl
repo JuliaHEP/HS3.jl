@@ -13,30 +13,28 @@ Create an analyses object based on the provided analysis specification and speci
 
 """
 function make_analyses(ana_spec::AnalysesSpec, specs::NamedTuple)
+    analyses = Dict()
     if haskey(specs, :functions)
         functional_specs = merge(specs[:functions], specs[:distributions])
     else
         functional_specs = specs[:distributions]
     end
-    ll_nt = make_likelihood(specs[:likelihoods][Symbol(ana_spec.likelihood)], functional_specs, specs[:data])
-    analyses = (likelihood = ll_nt,
-        #parameter_domain = make_domain_ranges(specs[:domains][Symbol(ana_spec.parameter_domain)],)
-    )
-    #if ana_spec.domains !== nothing
-    #    analyses = merge(analyses, (parameter_domain = make_domain_ranges(specs[:domains][Symbol(ana_spec.domains[1])]),))
-    #end
-    if ana_spec.parameter_init !== nothing
-        analyses = merge(analyses, (parameter_init = make_parameterpoints(specs[:parameter_points][Symbol(ana_spec.parameter_init)]),))
+    analyses[:likelihood]  = make_likelihood(specs[:likelihoods][Symbol(ana_spec.likelihood)], functional_specs, specs[:data])
+    if ana_spec.domains !== nothing
+        analyses[:parameter_domain] = make_domain_ranges(specs[:domains][Symbol(ana_spec.domains[1])])
     end
+    #if ana_spec.parameter_init !== nothing
+    #    analyses[:parameter_init] = make_parameterpoints(specs[:parameter_points][Symbol(ana_spec.parameter_init)])
+    #end
     if ana_spec.prior === nothing && ana_spec.domains !== nothing
         #analyses = merge(analyses, (prior = generate_uniform_prior_from_domain(specs[:domains][Symbol(ana_spec.domains[1])]),))
     else 
         #analyses = merge(analyses, (prior = (specs[:distributions][Symbol(ana_spec.prior)]),))  
     end
     if ana_spec.parameters_of_interest !== nothing
-        analyses = merge(analyses, (parameters_of_interest = ana_spec.parameters_of_interest,))
+        analyses[:parameters_of_interest] = ana_spec.parameters_of_interest
     end
-    return analyses;
+    return analyses#NamedTupleTools.namedtuple(analyses)
 end
 
 """

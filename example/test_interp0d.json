@@ -15,11 +15,25 @@
     ],
     "distributions": [
         {"type": "gaussian_dist",
-         "name": "model_channel1",
+         "name": "gaus1",
          "mean": "mu_interp",
          "sigma" : "a",
          "x": "obs_x_channel1"
+        },
+        {"type": "gaussian_dist",
+         "name": "gaus2",
+         "mean": 2,
+         "sigma" : 1,
+         "x": "obs_x_channel1"
+        },
+        {
+            "type": "product_dist",
+            "name": "model_channel1",
+            "factors": [
+                "gaus2", "gaus1"
+            ]
         }
+
     ],
     "data": [
         {
@@ -49,7 +63,7 @@
         {
             "name":"mu_interp2",
             "type": "product",
-            "factors": ["mu", "a"]
+            "factors": ["mu", 0.2]
         }
     ]
 }

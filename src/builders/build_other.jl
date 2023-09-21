@@ -18,7 +18,7 @@ domain_ranges = make_domain_ranges(domain_specs)
 function make_domain_ranges(domain_specs::NamedTuple)
     domain = NamedTuple()
     for (k, v) in zip(keys(domain_specs), domain_specs)
-        domain = merge(domain, (Symbol(k) => (v.min:(v.max-v.min):v.max),))
+        domain = merge(domain, (Symbol(k) => LinRange(v.min, v.max, 100),))
     end
     domain
 end
@@ -42,12 +42,28 @@ domain_specs = (x = (min = 0, max = 1), y = (min = -1, max = 1))
 prior = generate_uniform_prior_from_domain(domain_specs)
 
 """
-function generate_uniform_prior_from_domain(domain_specs::NamedTuple)
+function generate_uniform_prior_from_domainspecs(domain_specs::NamedTuple)
     prior = NamedTuple()
     for (k, v) in zip(keys(domain_specs), domain_specs)
         prior = merge(prior, (Symbol(k) => (Distributions.Uniform(v.min, v.max)),))
     end
     ValueShapes.NamedTupleDist(prior)
+end
+
+function generate_uniform_prior_from_domain(domain::NamedTuple)
+    prior = NamedTuple()
+    for (k, v) in zip(keys(domain), domain)
+        prior = merge(prior, (Symbol(k) => (Distributions.Uniform(first(v), last(v))),))
+    end
+    ValueShapes.NamedTupleDist(prior)
+end
+
+function generate_ranges_from_domain(domain::NamedTuple)
+    prior = NamedTuple()
+    for (k, v) in zip(keys(domain), domain)
+        prior = merge(prior, (Symbol(k) => ((first(v), last(v))),))
+    end
+    (prior)
 end
 """
     make_parameterpoints(pointspecs::NamedTuple)
@@ -70,7 +86,13 @@ julia> make_parameterpoints(pointspecs)
 function make_parameterpoints(pointspecs::NamedTuple)
     nt = NamedTuple()
     for (k,v) in zip(keys(pointspecs), pointspecs)
-        nt = merge(nt, (k => v.value,))
+        nt = merge(nt, (k => Float64(v.value),))
     end
     nt
+end
+
+
+function make_const_parameterpoints(pointspecs::NamedTuple)
+    const_pairs = [(k, Float64(v.value)) for (k, v) in pairs(pointspecs) if v.isconst]
+    return NamedTuple(const_pairs)
 end

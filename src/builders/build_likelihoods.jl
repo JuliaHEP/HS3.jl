@@ -76,14 +76,29 @@ A likelihood function.
 """   
 function generate_likelihood(dist::HistfactPDF, data::StatsBase.Histogram)  
     likelihood = LiteHF.pyhf_loglikelihoodof(dist.channel[1], convert.(Float64, data.weights))
-    priors = LiteHF.pyhf_logpriorof(dist.prior)
-    custom = Base.Fix1(_include_customs, dist)
-    @info ((dist.prior))
-    return (params  -> begin 
-        params = custom(params)
-        return likelihood([params[x] for x in dist.order]) + priors([params[x] for x in keys(dist.prior)])
+    #custom = Base.Fix1(_include_customs, dist)
+    #println(dist.prior)
+    #println(dist)
+    #@info ((dist.order))
+    #@info dist.channel
+    order = collect(dist.order)
+    function ll(params::NamedTuple)::Float64  
+        #params = custom(params)
+        return (likelihood(Float64.([params[x] for x in order])))#+ priors([params[x] for x in keys(dist.prior)])
         #return likelihood([params[x] for x in dist.order]) #+ priors([params[x] for x in keys(dist.prior)]) 
-    end)
+    end
+    return ll
+end
+
+function generate_constraints(constraint_dists::NamedTuple)
+    constraints = LiteHF.pyhf_logpriorof(constraint_dists)
+    #@info (constraint_dists)
+    #@info Distributions.logpdf(constraint_dists.lumi, 1)
+    constraint_names = collect(keys(constraint_dists))
+    function ll(params::NamedTuple)::Float64  
+        (constraints(Float64.([params[x] for x in constraint_names])))
+    end
+    return ll
 end
     
 
@@ -154,9 +169,16 @@ function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::Name
         end
     end
 
-    likelihood_functions = []
+    likelihood_functions = Function[]
+    constraints = (;)
     for i in 1:length(generated_dist)
         likelihood_functions = push!(likelihood_functions, generate_likelihood(generated_dist[i], generated_data[i]))
+        if typeof(generated_dist[i]) == HistfactPDF
+            constraints = merge(constraints, generated_dist[i].prior)
+        end
+    end
+    if constraints != (;)
+        likelihood_functions = push!(likelihood_functions, generate_constraints(constraints))
     end
     #auxiliary disitributions 
     if likelihood_spec.aux_distributions !== nothing
@@ -165,13 +187,10 @@ function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::Name
         end
     end
     return DensityInterface.logfuncdensity(
-        function(params)
-            ll = 0.0
-            for ll_function in likelihood_functions
-                ll += ll_function(params) 
-            end
-        return ll
-    end)
+        function(params::NamedTuple)
+            #return sum(ll_function(params) for ll_function in likelihood_functions)
+            return mapreduce(ll_function -> ll_function(params), +, likelihood_functions)
+        end)
 end
 
 

@@ -39,7 +39,8 @@ function generate_distribution(spec::DistributionSpec{:mixture_dist})
     Distributions.MixtureModel(collect(spec.params.summands), collect(spec.params.coefficients)/(sum(collect((spec.params.coefficients))))) 
 end
 function generate_distribution(spec::DistributionSpec{:product_dist}) 
-    return Distributions.product_distribution(collect(spec.params.factors)...)
+    println(typeof(collect(spec.params.factors)))
+    return Distributions.product_distribution(collect(spec.params.factors))
 end
 
 function generate_distribution(spec::DistributionSpec{:uniform_dist})

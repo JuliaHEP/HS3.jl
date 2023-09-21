@@ -113,7 +113,13 @@ generate_distributionspec(::Val{:uniform_dist}, data::NamedTuple) = Distribution
 
 generate_distributionspec(::Val{:polynomial_dist}, data::NamedTuple) = DistributionSpec{:polynomial_dist}((coefficients = data.coefficients, x= data.x, ))
 
-generate_distributionspec(::Val{:CrystalBall_dist}, data::NamedTuple) = DistributionSpec{:CrystalBall_dist}((alpha = data.alpha, x= data.x, m0 = data.m0, n = data.n, sigma = data.sigma, ))
+generate_distributionspec(::Val{:crystalball_dist}, data::NamedTuple) = DistributionSpec{:CrystalBall_dist}((alpha = data.alpha, m= data.m, m0 = data.m0, n = data.n, sigma = data.sigma, ))
+
+generate_distributionspec(::Val{:generic_dist}, data::NamedTuple) = DistributionSpec{:generic_dist}((expression = Meta.parse(String(_val_content(data.expression))), var = _typed_content([_find_variables_in_expression(Meta.parse(String(_val_content(data.expression))))...]), ))
+
+generate_distributionspec(::Val{:bernstein_poly_dist}, data::NamedTuple) = DistributionSpec{:bernstein_poly_dist}((coefficients = data.coefficients,))
+
+generate_distributionspec(::Val{:bifurkated_gaussian_dist}, data::NamedTuple) = DistributionSpec{:bifurkated_gaussian_dist}((mean = data.mean, sigmaL = data.sigmaL, sigmaR = data.sigmaR,))
 
 function generate_distributionspec(::Val{:histfactory_dist}, data::NamedTuple)
     HistFactorySpec(; (samples = generate_HistFactorySampleSpecs(data.samples), axes = generate_axes_specs(data.axes),)...)

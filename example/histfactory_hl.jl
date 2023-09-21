@@ -5,12 +5,41 @@ using BAT
 a = Pair(1, 2)
 zip(a[1], a[2])
   
-dict = file_to_dict("./example/rf515_hfJSON.json")
+dict = file_to_dict("./example/rf515_hfJSON_3.json")
 @elapsed specs = HS3.generate_specs(dict)
 analysis = HS3.make_analyses(specs.analyses[1], specs)
+val_a =[]
+expected_arr =[]
+x = -5:0.1:0.5
+for i in x
+    println(i)
+    logdensityof(analysis[:likelihood], (mu=1., syst1=0, syst2=0.0, syst3 = i, lumi = 1))
+    push!(val_a, HS3.LiteHF.my_val)
+    push!(expected_arr, HS3.LiteHF.expected_arr)
+end
+val_a
+plot(x, map(y -> y[1], val_a))
+plot(x, map(y -> y[2], expected_arr))
+logdensityof(analysis[:likelihood], (mu=1., syst1=0, syst2=0.0, syst3 = 4, lumi = 1))
+using Plots
+
+x = [-5, -4, -3, -2, -1, -0.5, 0, 0.5, 1, 2, 3, 4, 5]
+root_val = [[-2, -494.5], [-1.6, -395.6], [-1.2, -296.7], [-0.8, -197.8], [-0.4, -98.9], [-0.194824, -39.2175], [0, 0], [0.15518, -39.1675], [0.3, -98.8], [0.6, -197.6], [0.9, -296.4], [1.2, -395.2], [1.5, -494]]
+plot!(x, map(y -> y[1], root_val))
+
+plot(x, map(y -> y[1], l)
+)
+
+plot(x, -b.(x))
 #b = logdensityof(analysis.likelihood, (mu=1,  syst3_bin1 = 5, syst3_bin2 = 5,  syst1 =0., syst2 =0, mcstat_bin1 = 1, mcstat_bin2 = 1))
 
-b = logdensityof(analysis.likelihood, (mu=1., shapestat_bin1=1., shapestat_bin2=1.))
+default =  (mu=1., syst1=0, syst2=0, syst3 = 0, lumi = 1,)
+ranges =  (mu= LinRange(-3, 5, 100), syst1=LinRange(-5, 5, 100), syst2=LinRange(-5, 5, 100), syst3 = LinRange(-5, 5, 100), lumi = LinRange(0, 10, 100),)
+nt = default
+value_nt = explore_values(nt, ranges, analysis[:likelihood], default)
+using CSV
+write_to_csv(value_nt, "output_comb.csv")
+exp(2)
 #d = logdensityof(analysis.likelihood, (mu=1., syst1 =0.1, syst2 =1, syst3 =0.5, mcstat_bin1 = 1., mcstat_bin2 = 1.))
 b-d
 sqrt(sum([100, 0].^2))
@@ -26,14 +55,18 @@ using LiteHF
 plot(x, y)
 a = LiteHF.RelaxedPoisson(2.)
 using Distributions
-logpdf(a, Inf)
+a = Normal(1, 0.036)
+b = Normal()
+
+logpdf(a, 1) + 3 * logpdf(b, 1)
 logpdf(a, -2)
 
 b =Poisson(100)
 logpdf(b, 200)
 
-
-
+-7.98888596875571 -4.256813879704094 - 2.405
+#std::cout << "x" << " = " << x << std::endl;
+#high low nominal return value, sum
 logpdf(a, 100)
 
 log(100.) -100 -  logpdf(a, 1)
