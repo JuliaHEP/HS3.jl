@@ -27,6 +27,7 @@ External Links:
 
 import Distributions: location, params, pdf, logpdf
 using Distributions: @check_args, @distr_support, ContinuousUnivariateDistribution
+using SpecialFunctions: erf
 
 struct CrystalBall{T<:Real} <: ContinuousUnivariateDistribution
     x0::T       
@@ -46,9 +47,9 @@ end
 CrystalBall(x0::Real, sigma::Real, alpha::Real, n::Real; check_args::Bool=true) = CrystalBall(promote(x0, sigma, alpha, n)...; check_args=check_args)
 CrystalBall() = CrystalBall(0., 1., 1., 2.; check_args=false)
 
-#convert(::Type{CrystalBall{T}}, x0::Real, sigma::Real, alpha::Real, n::Real) where {T<:Real} = CrystalBall(T(x0),  T(sigma), T(alpha), T(n))
-#Base.convert(::Type{CrystalBall{T}}, d::CrystalBall) where {T<:Real} = CrystalBall{T}(T(d.x0),  T(d.sigma), T(d.alpha), T(d.n))
-#Base.convert(::Type{CrystalBall{T}}, d::CrystalBall{T}) where {T<:Real} = d
+convert(::Type{CrystalBall{T}}, x0::Real, sigma::Real, alpha::Real, n::Real) where {T<:Real} = CrystalBall(T(x0),  T(sigma), T(alpha), T(n))
+Base.convert(::Type{CrystalBall{T}}, d::CrystalBall) where {T<:Real} = CrystalBall{T}(T(d.x0),  T(d.sigma), T(d.alpha), T(d.n))
+Base.convert(::Type{CrystalBall{T}}, d::CrystalBall{T}) where {T<:Real} = d
 
 params(d::CrystalBall) = ((d.x0),  (d.sigma), (d.alpha), (d.alpha), (d.n))
 location(d::CrystalBall) = d.x0 
@@ -70,7 +71,7 @@ end
 #normalisation
 function _n_val(d::CrystalBall)
     c = d.n /abs(d.alpha) * 1/(d.n-1) * exp(- abs(d.alpha)^2 / 2)
-    b = sqrt(pi/2) *( 1+ SpecialFunctions.erf(abs(d.alpha)/sqrt(2)))
+    b = sqrt(pi/2) *( 1+ erf(abs(d.alpha)/sqrt(2)))
     return 1/(d.sigma*(b + c))
 end
 
@@ -97,7 +98,7 @@ end
 
 function _log_n_val(d::CrystalBall)
     c = d.n /abs(d.alpha) * 1/(d.n-1) * exp(- abs(d.alpha)^2 / 2)
-    b = sqrt(pi/2) *( 1+ SpecialFunctions.erf(abs(d.alpha)/sqrt(2)))
+    b = sqrt(pi/2) *( 1+ erf(abs(d.alpha)/sqrt(2)))
     return - (log(d.sigma) + log(b + c))
 end
 

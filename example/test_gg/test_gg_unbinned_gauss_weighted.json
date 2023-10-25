@@ -1,0 +1,120 @@
+{
+    "misc": {
+        "ROOT_internal": {
+            "combined_datas": {
+                "observed" : {
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel"]
+                }
+            },
+            "combined_distributions": {
+                "main" : {
+                    "distributions": [
+                        "model_channel1"
+                    ],
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel1"]
+                }
+            },
+            "ModelConfigs": {
+                "channel_observed": {
+                    "mcName": "ModelConfig",
+                    "pdfName": "channel_observed"
+                }
+            },
+            "attributes": {
+                "mu": { "tags": ["ORIGNAME:Lumi"]},
+                "obs_x_channel1": { "tags": ["ORIGNAME:obsx"]}
+            }
+        }
+    },
+    "analyses": [
+        {
+            "name": "channel_observed",
+            "likelihood": "channel_observed",
+            "parameters_of_interest": ["mu"],
+            "domains": ["default_domain"]
+        }
+    ],
+    "likelihoods": [
+        {
+            "name": "channel_observed",
+            "distributions": ["model_channel1"],
+            "data": ["observed_channel"]
+        }
+    ],
+    "distributions": [
+        {
+            "name": "model_channel1",
+            "x": "obs_x_channel1",
+            "mean": "mu",
+            "sigma": "sigma",
+            "type": "gaussian_dist"
+        }
+    ],
+    "data": [
+        {
+            "name": "observed_channel",
+            "axes": [
+                {
+                    "name": "obs_x_channel1",
+                    "value": 2.9
+                }
+            ],
+            "entries": [[2.4], [3.2], [7.5]],
+            "weights": [2, 1.5, 0.2],
+            "type": "unbinned"
+        }
+    ],
+    "metadata" :
+    {
+        "hs3_version" : "0.1.90"
+    },
+    "domains": [
+        {
+            "name": "default_domain",
+            "type": "product_domain",
+            "axes": [
+                {
+                    "name": "mu",
+                    "min": 0, 
+                    "max": 3
+                },
+                {
+                    "name": "obs_x_channel1",
+                    "min": 0, 
+                    "max": 8.2
+                },
+                {
+                    "name": "sigma",
+                    "min": 0.1, 
+                    "max": 1.5
+                }
+            ]
+        }
+    ],
+    "parameter_points": [
+        {
+            "name": "default_values",
+            "parameters": [
+            {
+                    "const": false,
+                    "name": "mu",
+                    "value": 1
+            },
+            {
+                "const": false,
+                "name": "obs_x_channel1",
+                "value": 2.4
+            },
+            {
+                "const": false,
+                "name": "sigma",
+                "value": 1
+            }
+        ]
+        }
+    ]
+}

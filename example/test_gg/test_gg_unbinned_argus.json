@@ -1,0 +1,136 @@
+{
+    "misc": {
+        "ROOT_internal": {
+            "combined_datas": {
+                "observed" : {
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel"]
+                }
+            },
+            "combined_distributions": {
+                "main" : {
+                    "distributions": [
+                        "model_channel1"
+                    ],
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel1"]
+                }
+            },
+            "ModelConfigs": {
+                "channel_observed": {
+                    "mcName": "ModelConfig",
+                    "pdfName": "channel_observed"
+                }
+            },
+            "attributes": {
+                "mu": { "tags": ["ORIGNAME:Lumi"]},
+                "obs_x_channel1": { "tags": ["ORIGNAME:obsx"]}
+            }
+        }
+    },
+    "analyses": [
+        {
+            "name": "channel_observed",
+            "likelihood": "channel_observed",
+            "parameters_of_interest": ["m0"],
+            "domains": ["default_domain"]
+        }
+    ],
+    "likelihoods": [
+        {
+            "name": "channel_observed",
+            "distributions": ["model_channel1"],
+            "data": ["observed_channel"]
+        }
+    ],
+    "distributions": [
+        {
+            "name": "model_channel1",
+            "mass": "obs_x_channel1",
+            "resonance": "m0",
+            "slope": "slope",
+            "power": "n",
+            "type": "argus_dist"
+        }
+    ],
+    "data": [
+        {
+            "name": "observed_channel",
+            "axes": [
+                {
+                    "name": "obs_x_channel1",
+                    "value": 2.9
+                }
+            ],
+            "entries": [[2.4], [3.2], [4.5]],
+            "weights": [1, 1, 1],
+            "type": "unbinned"
+        }
+    ],
+    "metadata" :
+    {
+        "hs3_version" : "0.1.90"
+    },
+    "domains": [
+        {
+            "name": "default_domain",
+            "type": "product_domain",
+            "axes": [
+                {
+                    "name": "m0",
+                    "min": 0, 
+                    "max": 10.0
+                },
+                {
+                    "name": "obs_x_channel1",
+                    "min": 0, 
+                    "max": 10.0
+                },
+                {
+                    "name": "slope",
+                    "min": 0.1, 
+                    "max": 1.5
+                },
+                {
+                    "name": "n",
+                    "min": 0.0, 
+                    "max": 20.0
+                }
+            ]
+        }
+    ],
+    "parameter_points": [
+        {
+            "name": "default_values",
+            "parameters": [
+            {
+                    "const": false,
+                    "name": "m0",
+                    "value": 1
+            },
+            {
+                "const": false,
+                "name": "obs_x_channel1",
+                "value": 2.4
+            },
+            {
+                "const": false,
+                "name": "sigma",
+                "value": 1
+            },
+            {
+                "const": false,
+                "name": "alpha",
+                "value": 1
+            },
+            {
+                "const": false,
+                "name": "n",
+                "value": 10
+            }
+        ]
+        }
+    ]
+}

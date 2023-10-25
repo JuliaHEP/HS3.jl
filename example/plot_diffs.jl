@@ -14,7 +14,7 @@ function write_to_csv(nt::NamedTuple, filename::String)
     CSV.write(filename, rows)
 end
 
-write_to_csv(value_nt, "output_modified_zgg.csv")
+#write_to_csv(value_nt, "output_modified_zgg.csv")
 
 function explore_values(nt::NamedTuple, ranges::NamedTuple, ll, default::NamedTuple)
     # Initialize a Dict for collecting the results

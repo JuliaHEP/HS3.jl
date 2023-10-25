@@ -13,25 +13,35 @@ A likelihood function.
 """
 function generate_likelihood(dist, data::StatsBase.Histogram)  
     bin_edges = data.edges[1]
+    println(bin_edges)
     bin_edges_left = bin_edges[1:end-1]
     bin_edges_right = bin_edges[2:end]
     bin_widths = bin_edges_right - bin_edges_left
-    bin_centers = (bin_edges_right + bin_edges_left) / 2 
+    bin_centers = (bin_edges_right + bin_edges_left) / 2
+    @info bin_widths bin_centers 
     likelihood = function (params)
         lpdf = 0.0
         for i in 1:length(data.weights)
-            lpdf += Distributions.logpdf(Distributions.Poisson(bin_widths[i] * Distributions.pdf(dist(params), bin_centers[i])), data.weights[i])
+            #@info Distributions.pdf(Distributions.truncated(dist(params), first(bin_edges), last(bin_edges)), bin_centers[i])
+            #@info dist(params)  Distributions.logpdf(ContinousPoisson(bin_widths[i] * Distributions.pdf(Distributions.truncated(dist(params), first(bin_edges), last(bin_edges)), bin_centers[i])), data.weights[i]) 
+            @info dist(params) bin_centers[i] first(bin_edges) last(bin_edges) 
+            @info collect(bin_widths)
+            lpdf += Distributions.logpdf(ContinousPoisson(bin_widths[i] * Distributions.pdf(Distributions.truncated(dist(params), first(bin_edges), last(bin_edges)), bin_centers[i])), data.weights[i]) 
         end
         return lpdf
     end
-    return params -> likelihood(params)
+    return params -> likelihood(params) #+ 867.1179624924561
 end
 
 function generate_likelihood(dist, data::UnbinnedData)  
+    #@info first(data.axes[1].range), last(data.axes[1].range)
     likelihood = function (params)
+        range_low = first(data.axes[1].range) 
+        range_high = last(data.axes[1].range)
+        norm = log(_norm(dist(params), range_low, range_high))
         lpdf = 0.0
-        for i in 1:length(data.weights)
-            lpdf += Distributions.logpdf(Distributions.Poisson(Distributions.pdf(dist(params), data.entries[i][1])), data.weights[i])
+        for i in 1:length(data.entries)
+            lpdf += (_normalize_logpdf(dist(params), range_low, range_high, data.entries[i][1]) - (norm)) * data.weights[i]
         end
         return lpdf
     end
@@ -75,65 +85,27 @@ Generate a likelihood function for a given HistfactPDF distribution and histogra
 A likelihood function.
 """   
 function generate_likelihood(dist::HistfactPDF, data::StatsBase.Histogram)  
-    likelihood = LiteHF.pyhf_loglikelihoodof(dist.channel[1], convert.(Float64, data.weights))
-    #custom = Base.Fix1(_include_customs, dist)
-    #println(dist.prior)
-    #println(dist)
-    #@info ((dist.order))
-    #@info dist.channel
+    likelihood = pyhf_loglikelihoodof(dist.channel, convert.(Float64, data.weights))
     order = collect(dist.order)
     function ll(params::NamedTuple)::Float64  
-        #params = custom(params)
-        return (likelihood(Float64.([params[x] for x in order])))#+ priors([params[x] for x in keys(dist.prior)])
-        #return likelihood([params[x] for x in dist.order]) #+ priors([params[x] for x in keys(dist.prior)]) 
+        return (likelihood( [params[x] for x in order]))
     end
     return ll
 end
 
 function generate_constraints(constraint_dists::NamedTuple)
-    constraints = LiteHF.pyhf_logpriorof(constraint_dists)
-    #@info (constraint_dists)
-    #@info Distributions.logpdf(constraint_dists.lumi, 1)
+    constraints = pyhf_logpriorof(constraint_dists)
+
     constraint_names = collect(keys(constraint_dists))
     function ll(params::NamedTuple)::Float64  
-        (constraints(Float64.([params[x] for x in constraint_names])))
+        constraints(([params[x] for x in constraint_names]))
     end
     return ll
 end
     
 
-#@generated function _include_customs(order::Vector,customs::NamedTuple, params)
-#    params_expr = :(params)
-#    order_expr = :(order)
-#    customs_expr = :(customs)
-#    return :(($order_expr, $customs_expr, $params_expr) -> begin
-#        for x in $order_expr
-#            if haskey($customs_expr, x)
-#                nt = (;)
-#                for k in $customs_expr[x]
-#                    nt = merge_namedtuples(nt, (k => $params_expr[k],))
-#                end
-#                $params_expr = merge_namedtuples($params_expr, (x => nt,))
-#            end
-#        end
-#        return $params_expr
-#    end)
-#end
 
-function _include_customs(dist, params)
-        for x in dist.order
-            if haskey(dist.customs, x)
-                nt = (;)
-                for k in dist.customs[x]
-                    nt = merge(nt, (k => (params[k]),))
-                end
-                #if !haskey(params, x)
-                    params = merge(params, (x => nt,))
-                #end
-            end
-        end
-    return params
-end
+
 
 """
     make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::NamedTuple, data_specs::NamedTuple)
@@ -149,7 +121,7 @@ Create a likelihood function based on the given likelihood specification, functi
 A combined likelihood function.
 
 """
-function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::NamedTuple, data_specs::NamedTuple)
+function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::NamedTuple, data_specs::NamedTuple, domain::NamedTuple)
     generated_dist = []
     generated_data = []
     free_parameters = []
@@ -165,7 +137,7 @@ function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::Name
             else
                 generated_dist = push!(generated_dist, make_functional(functional_specs[Symbol(likelihood_spec.distributions[i])], sorted_specs))
             end
-            generated_data = push!(generated_data, make_data(data_specs[Symbol(likelihood_spec.data[i])]))
+            generated_data = push!(generated_data, make_data(data_specs[Symbol(likelihood_spec.data[i])], domain))
         end
     end
 
@@ -186,12 +158,38 @@ function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::Name
             likelihood_functions = push!(likelihood_functions, generate_likelihood(make_functional(functional_specs[Symbol(aux)], sorted_specs)))
         end
     end
-    return DensityInterface.logfuncdensity(
-        function(params::NamedTuple)
-            #return sum(ll_function(params) for ll_function in likelihood_functions)
-            return mapreduce(ll_function -> ll_function(params), +, likelihood_functions)
-        end)
+    #chunks = Iterators.partition(spec_dict, length(keys(spec_dict)) ÷ Threads.nthreads()+1)
+    #tasks = map(chunks) do chunk
+    #    Threads.@spawn _gen_specs(chunk)
+    #end
+    #chunk_sums = fetch.(tasks)
+    #return merge(chunk_sums...)
+    #if length(likelihood_functions) < 5
+    #function log_density(params::NamedTuple)
+    #    # Pre-allocate the results
+    #    n = length(likelihood_functions)
+    #    results = Vector{Float64}(undef, n)
+    #    
+    #    # Compute the log-likelihoods in-place
+    #    for (i, ll_function) in enumerate(likelihood_functions)
+    #        results[i] = ll_function(params)
+    #    end
+    #
+    #    # Sum the results
+    #    return sum(results)
+    #end
+    function log_density(params::NamedTuple; likelihood_functions::Vector{Function}=likelihood_functions)
+        return sum(ll_function(params) for ll_function in likelihood_functions)
+    end
+    return DensityInterface.logfuncdensity(log_density)
+    #else 
+    #calc = Base.Fix1(compute_density, likelihood_functions)
+    #return DensityInterface.logfuncdensity(
+    #    params -> calc(params)
+    #)
+    #end
 end
+
 
 
 """

@@ -7,8 +7,14 @@ Template for Julia packages.
 """
 
 module HS3
-    import JSON3, Distributions, ValueShapes, StatsBase, DensityInterface, LiteHF, NamedTupleTools
+    import JSON3, Distributions, ValueShapes, StatsBase, DensityInterface, NamedTupleTools
+    using Unrolled
+    using SpecialFunctions: logabsgamma, loggamma, gamma, erf
+    using LogExpFunctions: xlogy
     using Parameters 
+    import Distributions: logpdf, pdf
+    #using Cuba: vegas
+    using QuadGK
     abstract type AbstractHS3Spec end
 
     include("read_in.jl")
@@ -28,10 +34,19 @@ module HS3
     include("specs/likelihoodspecs.jl")
     include("specs/analysesspecs.jl")  
 
-    
-    for file in readdir("src/builders", sort = false)
-        include(joinpath("builders/", file))
-    end
+    include("builders/build_analyses.jl")
+    include("builders/modifier_utils.jl")
+    include("builders/build_data.jl")
+    include("builders/build_distributions.jl")
+    include("builders/build_functionals.jl")
+    include("builders/build_functions.jl")
+    include("builders/build_histfactory.jl")
+    include("builders/build_likelihoods.jl")
+    include("builders/build_other.jl")
+    include("builders/histfactory_utils.jl")
+    include("builders/topological_sort.jl")
+
+
     include("Validator.jl")
 
     #function _precompile()

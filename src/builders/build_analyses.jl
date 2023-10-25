@@ -19,10 +19,11 @@ function make_analyses(ana_spec::AnalysesSpec, specs::NamedTuple)
     else
         functional_specs = specs[:distributions]
     end
-    analyses[:likelihood]  = make_likelihood(specs[:likelihoods][Symbol(ana_spec.likelihood)], functional_specs, specs[:data])
     if ana_spec.domains !== nothing
         analyses[:parameter_domain] = make_domain_ranges(specs[:domains][Symbol(ana_spec.domains[1])])
     end
+    analyses[:likelihood]  = make_likelihood(specs[:likelihoods][Symbol(ana_spec.likelihood)], functional_specs, specs[:data], analyses[:parameter_domain])
+    
     #if ana_spec.parameter_init !== nothing
     #    analyses[:parameter_init] = make_parameterpoints(specs[:parameter_points][Symbol(ana_spec.parameter_init)])
     #end

@@ -5,7 +5,7 @@ using NamedTupleTools
 using ValueShapes
 
 #init 
-dict = file_to_dict("/net/e4-nfs-home.e4.physik.tu-dortmund.de/home/rpelkner/Documents/125.json")
+dict = file_to_dict("/ceph/groups/e4/users/cburgard/public/forRobin/higgs/ouput/noES_ind/zz/125.json")
 specs = HS3.generate_specs(dict)
 analysis = HS3.make_analyses(specs.analyses[5], specs)
 
@@ -19,23 +19,62 @@ prior = merge(NamedTupleDist(prior), constant_points)
 #prior = NamedTupleDist(prior)
 totalndof(valshape(prior)) #should be 63
 typeof(values(prior))
-
+all_points
 using BAT
 posterior = PosteriorMeasure(analysis[:likelihood], (prior))
-@btime logdensityof(analysis[:likelihood], all_points)
+logdensityof(analysis[:likelihood], all_points)
+logdensityof(posterior, all_points)
 @btime logdensityof(analysis[:likelihood], all_points)
 #init values
 #x0 = collect(select(all_points, Tuple(setdiff(keys(all_points), keys(constant_points)))))
 #x0 = Float64.(x0)
 using Distributions
 using ValueShapes
-
-
+b = Normal(0, 0.036)
+logpdf(b, 2) 
 function reorder_nt(reference_nt, target_nt::NamedTuple)::NamedTuple
     return NamedTuple{keys(reference_nt)}(tuple([getfield((target_nt), k) for k in keys(reference_nt)]...))
 end
 all_points = merge(all_points, (mu =0.,))
 all_points = reorder_nt(prior, all_points)
+
+function unique_fields_values(nt1::NamedTuple, nt2::NamedTuple)
+    unique_keys = setdiff(fieldnames(typeof(nt1)), fieldnames(typeof(nt2)))
+    return NamedTuple{Tuple(unique_keys)}(tuple(map(k -> getproperty(nt1, k), unique_keys)...))
+end
+un = unique_fields_values(analysis[:parameter_domain], (constant_points))
+un = delete(un,  (:obs_x_ATLAS_H_2e2mu_channel_2011_1250_1 , :obs_x_ATLAS_H_2e2mu_channel_2012_1250_1, :obs_x_ATLAS_H_2mu2e_channel_2011_1250_1, :obs_x_ATLAS_H_2mu2e_channel_2012_1250_1, :obs_x_ATLAS_H_4e_channel_2011_1250_1, :obs_x_ATLAS_H_4e_channel_2012_1250_1, :obs_x_ATLAS_H_4mu_channel_2011_1250_1, :obs_x_ATLAS_H_4mu_channel_2012_1250_1)) 
+
+function make_namedtuple_from_file(filepath::String)
+    pairs = Pair{Symbol, Float64}[]
+    open(filepath, "r") do file
+        for line in eachline(file)
+            if occursin("=", line)
+                parts = split(line, "=")
+                var_name = strip(parts[1])
+                var_value = parse(Float64, strip(parts[2]))
+                push!(pairs, Symbol(var_name) => var_value)
+            end
+        end
+    end
+    return NamedTuple(pairs)
+end
+
+# Example usage
+filepath = "/net/e4-nfs-home.e4.physik.tu-dortmund.de/home/rpelkner/Downloads/distribution_results.txt"
+default = make_namedtuple_from_file(filepath)
+
+ex = explore_values(un, analysis[:parameter_domain], analysis[:likelihood], default)
+
+write_to_csv(ex, "zz_final.csv")
+
+
+include 
+
+
+
+
+
 #overwrite bat_findmode
 import BAT
 import BAT: bat_findmode
@@ -110,7 +149,7 @@ analysis = HS3.make_analyses(specs.analyses[5], specs)
 posterior = PosteriorMeasure(analysis[:likelihood], prior)
 
 @btime logdensityof(posterior)(all_points)
-using ProfileView
+
 using Profiler
 @profview logdensityof(posterior)(all_points)
 Profile.print(sortedby = :count)
@@ -158,25 +197,38 @@ end
 # Profiling
 lower_bounds = posterior.prior.bounds.vol.lo
 upper_bounds = posterior.prior.bounds.vol.hi
-resolutions = ones(Int, length(x0)) * 5 # one entry for each parameter
+resolutions = ones(Int, length(x0)) * 200 # one entry for each parameter
 
 param_ranges = construct_profile_ranges(sol, lower_bounds, upper_bounds, resolutions)
 
 prof = profile(problem, sol; conf_level=0.683, param_ranges, parallel=true)
 
+
+
 prof
 dump(prof)
-prof.confidence_intervals
+prof.confidence_intervals[5][1]
+collect(names)
+
+namedtuple_entries = [(Symbol(name),(prof.confidence_intervals[key][1],  prof.confidence_intervals[key][2])) for (name, key) in zip(collect(names), sort(collect(keys(prof.confidence_intervals))))]
+result = NamedTuple(namedtuple_entries)
+
+
 using CSV
 using JSON3
-JSON3.write("zz_profile_ll.json", prof.confidence_intervals)
+#JSON3.write("zz_profile_ll.txt", prof.confidence_intervals)
+open("higgs_noES_zzCI.json", "w") do f
+    JSON3.write(f, (result))
+end
 
-write("zz_profile_ll.txt", collect(names))
+
+write("higgs_noES_zzCI.txt", result)
 a=1
 
 using ΒAT
 samples = bat_sample(posterior)
 bat_report(samples.result)
+prior.alpha_pdf_gg_llll_2011
 evm = EvaluatedMeasure(posterior, samples=samples.result)
 write("report.txt", bat_report(evm))
 using StatsBase

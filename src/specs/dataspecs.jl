@@ -45,7 +45,7 @@ A `BinnedDataSpec` object representing the specified binned data.
 """
 function generate_dataspec(dict::AbstractDict, ::Val{:binned})
     content_dict = Dict(filter(entry -> entry[1] ∉ [:type, :name], dict))
-    content_dict[:axes] = (;)#generate_axes_specs(dict[:axes])
+    content_dict[:axes] = generate_axes_specs(dict[:axes])
     haskey(content_dict, :uncertainty) ? content_dict[:uncertainty] = generate_uncertaintyspec(dict[:uncertainty]) : nothing
     temp = NamedTuple(content_dict)
     BinnedDataSpec{length(content_dict[:contents])}(; temp...)
@@ -67,7 +67,7 @@ Specification for unbinned data within the HS3 framework.
 # Type Parameters
 - `N`: Size of the contents array.
 """
-@with_kw struct UnbinnedDataSpec{N} <: AbstractDataSpec 
+@with_kw struct UnbinnedDataSpec <: AbstractDataSpec 
     entries::AbstractArray{<:Number} 
     entries_errors::Union{Nothing, AbstractArray{<:Number}} = nothing 
     axes::NamedTuple#NamedTuple{<:Any, <:NTuple{N, AxesSpec}}
@@ -99,7 +99,7 @@ spec = generate_unbinneddataspec(dict)
 """
 function generate_dataspec(dict::AbstractDict, ::Val{:unbinned})
     content_dict = filter(entry -> entry[1] ∉ [:type, :name], dict)
-    content_dict[:axes] = (;)#generate_axes_specs(dict[:axes])
+    content_dict[:axes] = generate_axes_specs(dict[:axes])
     if haskey(dict, :entries_errors)
         @assert size(dict[:entries_errors]) == size(dict[:entries]) "Size/shape of entries_errors in unbinned data not correct"
         content_dict[:entries_errors] = reduce(vcat, dict[:entries_errors]')
@@ -110,7 +110,7 @@ function generate_dataspec(dict::AbstractDict, ::Val{:unbinned})
     end
     content_dict[:entries] = reduce(vcat, (dict[:entries]))
     temp = NamedTuple(content_dict)
-    UnbinnedDataSpec{length(temp.entries)}(; temp...)
+    UnbinnedDataSpec(; temp...)
 end
 
 #-------------------- Point Data Specifactions ---------------------------------------------

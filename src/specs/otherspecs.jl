@@ -74,10 +74,11 @@ Struct representing the specification of axes in the HS3 framework.
 
 All fields default are optional and default to `nothing`.
 """
-@with_kw struct AxesSpec{T <: Real, S <: Real} <: AbstractHS3Spec
-    max::Union{T, Nothing} = nothing
-    min::Union{S, Nothing} = nothing 
+@with_kw struct AxesSpec <: AbstractHS3Spec
+    max::Union{Real, Nothing} = nothing
+    min::Union{Real, Nothing} = nothing 
     nbins::Union{Integer, Nothing} = nothing
+    value::Union{Real, Nothing} = nothing
 end
 
 

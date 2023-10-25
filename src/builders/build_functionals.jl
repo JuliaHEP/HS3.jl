@@ -82,8 +82,9 @@ Recursively create a functional representation of the given specification, optio
 An executeable functional representation of the specification.
 
 """
-
+### this is bad
 function make_functional(spec::AbstractFunctionalSpec, sorted_functionals::Vector, level::Int64 = 0)
+    funct = make_functional(spec)
     return params -> begin
         functionals = NamedTuple()
         sorted_functionals = filter(x -> x[1] > level, sorted_functionals)
@@ -91,7 +92,7 @@ function make_functional(spec::AbstractFunctionalSpec, sorted_functionals::Vecto
             functionals = merge(functionals, (first(last(funct)) => make_functional(funct[2][2], sorted_functionals, level+1)(params), ))
         end
         #println("hereeee: ", functionals)
-        funct = make_functional(spec)
+        
         #println(zip((first.(last.(sorted_functionals))), functionals))
         params = merge(params, zip((first.(last.(sorted_functionals))), functionals))
         #println("bla ", sorted_functionals)

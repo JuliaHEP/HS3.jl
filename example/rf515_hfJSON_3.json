@@ -46,13 +46,6 @@
     ],
     "distributions": [
         {
-            "name": "lumi_con",
-            "mean": 1,
-            "sigma": 0.036,
-            "x": "lumi",
-            "type": "gaussian_dist"
-        },
-        {
             "name": "model_channel1",
             "axes": [
                 {
@@ -65,7 +58,8 @@
             "samples": [
                 {
                     "data": {
-                        "contents": [10, 20]
+                        "contents": [10, 20],
+                        "errors": [5, 10]
                     },
                     "modifiers": [
                         {
@@ -82,13 +76,19 @@
                             "parameter": "syst1",
                             "type": "normsys",
                             "constraint": "Gauss"
+                        },
+                        {
+                            "name": "stat",
+                            "type": "staterror",
+                            "constraint": "Poisson"
                         }
                     ],
                     "name": "signal"
                 },
                 {
                     "data": {
-                        "contents": [100, 80]
+                        "contents": [100, 80],
+                        "errors": [10, 15]
                     },
                     "modifiers": [
                         {
@@ -105,13 +105,19 @@
                             "parameter": "syst2",
                             "type": "normsys",
                             "constraint": "Gauss"
+                        },
+                        {
+                            "name": "stat",
+                            "type": "staterror",
+                            "constraint": "Poisson"
                         }
                     ],
                     "name": "background1"
                 },
                 {
                     "data": {
-                        "contents": [1, 100]
+                        "contents": [80, 100],
+                        "errors": [0, 20]
                     },
                     "modifiers": [
                         {
@@ -122,6 +128,16 @@
                             "name": "syst3",
                             "parameter": "syst3",
                             "type": "histosys",
+                            "constraint": "Gauss"
+                        },
+                        {
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "name": "syst3",
+                            "parameter": "syst3",
+                            "type": "normsys",
                             "constraint": "Gauss"
                         }
                     ],

@@ -7,7 +7,40 @@ zip(a[1], a[2])
   
 dict = file_to_dict("./example/rf515_hfJSON_3.json")
 @elapsed specs = HS3.generate_specs(dict)
-analysis = HS3.make_analyses(specs.analyses[1], specs)
+@elapsed analysis = HS3.make_analyses(specs.analyses[1], specs)
+logdensityof(analysis[:likelihood], (mu=1, syst1=0., syst2=0.0, syst3 = 0, lumi = 1, gamma_stat_HHChannel_bin_0_hh = 0.1, gamma_stat_HHChannel_bin_1_hh = 1.))
+467.786343 - 140.2950183
+
+
+
+using HDF5
+results = bat_read("/ceph/groups/e4/users/rpelkner/public/HS3/higgs_zz/out/results.hdf5")
+bat_report(results.result)
+results.result
+using Plots
+using Distributions
+using ValueShapes
+prior = NamedTupleDist(mu = Normal(1, 0.018), syst1=Uniform(-5, 5), syst2=Uniform(-5, 5), syst3 = Uniform(-5, 5), lumi = 1, gamma_stat_HHChannel_bin_0_hh = 0.1, gamma_stat_HHChannel_bin_1_hh = 1)
+posterior  = PosteriorMeasure(analysis[:likelihood], prior)
+samples = bat_sample(posterior)
+bat_write("test.hdf5",   samples.result)
+s = bat_read("test.hdf5")
+
+bat_report(s.result)
+logdensityof(posterior, (mu=1., syst1=0., syst2=0.0, syst3 = 0.0,))
+
+
+9.928141820099066^2
+sqrt(97.7857)
+327
+283.147 - 277.643 
+
+using Distributions 
+b = Normal(1, 1)
+a = Normal(1, 0.018)
+
+logpdf(a, 1)
+logpdf(b, 1)
 val_a =[]
 expected_arr =[]
 x = -5:0.1:0.5
@@ -118,10 +151,10 @@ function get_smallest_interval_edges(
     lower, upper = BAT.get_interval_edges(hist_p, atol=atol)
     return (lower=lower, upper=upper)
 end
-
+results.optargs
 plot(samples, 1, bins=400)
 using StatsBase
-get_smallest_interval_edges(samples, 1, 0.997, bins=400, atol=0.2)
+get_smallest_interval_edges(results, 1, 0.997, bins=400, atol=0.2)
 using Optimization
 using OptimizationOptimJL
 using ProfileLikelihood 
@@ -183,7 +216,7 @@ function get_smallest_interval_edges(
 end
 
 plot(samples, 2, bins=400)
-get_smallest_interval_edges(samples, 2, 0.6895, bins=400, atol=0.2)
+get_smallest_interval_edges(results, 2, 0.6895, bins=400, atol=0.2)
 
 using ProfileLikelihood 
 #docu: https://danielvandh.github.io/ProfileLikelihood.jl/dev/

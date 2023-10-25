@@ -35,7 +35,7 @@ function generate_function(spec::FunctionSpec{:interpolation0d})
     f = function (vars)
         total = copy(spec.params.nom)
         for i in 1:length(spec.params.codes)
-            total = interpolation0d(spec.params.codes[i], spec.params.low[i], spec.params.high[i], spec.params.nom, vars[i], total)
+            total = interpolation0d!(spec.params.codes[i], spec.params.low[i], spec.params.high[i], spec.params.nom, vars[i], total)
         end
         total
     end
@@ -43,7 +43,7 @@ function generate_function(spec::FunctionSpec{:interpolation0d})
 end
 
 # As defined in https://root.cern.ch/doc/master/EvaluateFuncs_8h_source.html#l00112 and https://root.cern.ch/doc/master/FlexibleInterpVar_8cxx_source.html#l00196
-function interpolation0d(code, low, high, nominal, paramVal, total)
+function interpolation0d!(code, low, high, nominal, paramVal, total)
     if code == 0 
         #piece-wise linear
         if (paramVal > 0)

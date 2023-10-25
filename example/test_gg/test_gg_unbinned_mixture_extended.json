@@ -1,0 +1,178 @@
+{
+    "misc": {
+        "ROOT_internal": {
+            "combined_datas": {
+                "observed" : {
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel"]
+                }
+            },
+            "combined_distributions": {
+                "main" : {
+                    "distributions": [
+                        "model_channel1"
+                    ],
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel1"]
+                }
+            },
+            "ModelConfigs": {
+                "channel_observed": {
+                    "mcName": "ModelConfig",
+                    "pdfName": "channel_observed"
+                }
+            },
+            "attributes": {
+                "m0": { "tags": ["ORIGNAME:Lumi"]},
+                "m1": { "tags": ["ORIGNAME:mmmm1"]},
+                "sigma0": { "tags": ["ORIGNAME:Lumi2"]},
+                "sigma1": { "tags": ["ORIGNAME:sig1"]},
+                "obs_x_channel1": { "tags": ["ORIGNAME:obsx"]}
+            }
+        }
+    },
+    "analyses": [
+        {
+            "name": "channel_observed",
+            "likelihood": "channel_observed",
+            "parameters_of_interest": ["m0"],
+            "domains": ["default_domain"]
+        }
+    ],
+    "likelihoods": [
+        {
+            "name": "channel_observed",
+            "distributions": ["model_channel1"],
+            "data": ["observed_channel"]
+        }
+    ],
+    "distributions": [
+        {
+            "name": "model_channel1",
+            "summands": ["f1", "f2"],
+            "type": "mixture_dist",
+            "extended": true,
+            "coefficients": ["a0", "a1"]
+        },
+        {
+            "name" : "f1",
+            "x": "obs_x_channel1",
+            "mean": "m0",
+            "sigma": "sigma0",
+            "type": "gaussian_dist"
+        },
+        {
+            "name" : "f2",
+            "x": "obs_x_channel1",
+            "mean": "m1",
+            "sigma": "sigma1",
+            "type": "gaussian_dist"
+        }
+
+    ],
+    "data": [
+        {
+            "name": "observed_channel",
+            "axes": [
+                {
+                    "name": "obs_x_channel1",
+                    "value": 2.9
+                }
+            ],
+            "entries": [[2.4], [3.2], [7.5]],
+            "weights": [1, 1, 1],
+            "type": "unbinned"
+        }
+    ],
+    "metadata" :
+    {
+        "hs3_version" : "0.1.90"
+    },
+    "domains": [
+        {
+            "name": "default_domain",
+            "type": "product_domain",
+            "axes": [
+                {
+                    "name": "a0",
+                    "min": 0.1, 
+                    "max": 6
+                },
+                {
+                    "name": "a1",
+                    "min": 0.1, 
+                    "max": 6
+                },
+                {
+                    "name": "m0",
+                    "min": 0, 
+                    "max": 6
+                },
+                {
+                    "name": "m1",
+                    "min": 0, 
+                    "max": 6
+                },
+                {
+                    "name": "obs_x_channel1",
+                    "min": 0, 
+                    "max": 8.2
+                },
+                {
+                    "name": "sigma0",
+                    "min": 0.1, 
+                    "max": 3
+                },
+                {
+                    "name": "sigma1",
+                    "min": 0.1, 
+                    "max": 3
+                }
+            ]
+        }
+    ],
+    "parameter_points": [
+        {
+            "name": "default_values",
+            "parameters": [
+            {
+                    "const": false,
+                    "name": "a0",
+                    "value": 1
+            },
+            {
+                "const": false,
+                "name": "a1",
+                "value": 1
+            },
+            {
+                    "const": false,
+                    "name": "m0",
+                    "value": 1
+            },
+            {
+                "const": false,
+                "name": "m1",
+                "value": 1
+            },
+            {
+                "const": false,
+                "name": "obs_x_channel1",
+                "value": 2.4
+            },
+            {
+                "const": false,
+                "name": "sigma0",
+                "value": 1
+            },
+            {
+                "const": false,
+                "name": "sigma1",
+                "value": 1
+            }
+        ]
+        }
+    ]
+}

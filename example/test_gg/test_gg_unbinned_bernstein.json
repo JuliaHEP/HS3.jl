@@ -1,0 +1,144 @@
+{
+    "misc": {
+        "ROOT_internal": {
+            "combined_datas": {
+                "observed" : {
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel"]
+                }
+            },
+            "combined_distributions": {
+                "main" : {
+                    "distributions": [
+                        "model_channel1"
+                    ],
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel1"]
+                }
+            },
+            "ModelConfigs": {
+                "channel_observed": {
+                    "mcName": "ModelConfig",
+                    "pdfName": "channel_observed"
+                }
+            },
+            "attributes": {
+                "mu": { "tags": ["ORIGNAME:Lumi"]},
+                "obs_x_channel1": { "tags": ["ORIGNAME:obsx"]}
+            }
+        }
+    },
+    "analyses": [
+        {
+            "name": "channel_observed",
+            "likelihood": "channel_observed",
+            "parameters_of_interest": ["c1"],
+            "domains": ["default_domain"]
+        }
+    ],
+    "likelihoods": [
+        {
+            "name": "channel_observed",
+            "distributions": ["model_channel1"],
+            "data": ["observed_channel"]
+        }
+    ],
+    "distributions": [
+        {
+            "name": "model_channel1",
+            "x": "obs_x_channel1",
+            "coefficients": ["c1", "c2", "c3", "c4", "c5"],
+            "type": "bernstein_poly_dist"
+        }
+    ],
+    "data": [
+        {
+            "name": "observed_channel",
+            "axes": [
+                {
+                    "name": "obs_x_channel1",
+                    "value": 2.9
+                }
+            ],
+            "entries": [[2.4]],
+            "weights": [1],
+            "type": "unbinned"
+        }
+    ],
+    "metadata" :
+    {
+        "hs3_version" : "0.1.90"
+    },
+    "domains": [
+        {
+            "name": "default_domain",
+            "type": "product_domain",
+            "axes": [
+                {
+                    "name": "c1",
+                    "min": 0, 
+                    "max": 10
+                },
+                {
+                    "name": "c2",
+                    "min": 0, 
+                    "max": 10
+                },
+                {
+                    "name": "c3",
+                    "min": 0, 
+                    "max": 10
+                },
+                {
+                    "name": "c4",
+                    "min": 0, 
+                    "max": 10
+                },
+                {
+                    "name": "c5",
+                    "min": 0, 
+                    "max": 10
+                }, 
+                {
+                    "name": "obs_x_channel1",
+                    "min": 0, 
+                    "max": 8.2
+                }
+            ]
+        }
+    ],
+    "parameter_points": [
+        {
+            "name": "default_values",
+            "parameters": [
+            {
+                "const": false,
+                "name": "obs_x_channel1",
+                "value": 2.4
+            },
+            {
+                "name": "c1",
+                "value": 1
+            },
+            {
+                "name": "c2",
+                "value": 1
+            },
+            {
+                "name": "c3",
+                "value": 1
+            },
+            {
+                "name": "c4",
+                "value": 1
+            },
+            {
+                "name": "c5",
+                "value": 1
+            }
+        ]
+        }
+    ]
+}
