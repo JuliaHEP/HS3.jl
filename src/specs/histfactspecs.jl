@@ -135,9 +135,9 @@ function generate_HistFactorySampleSpec(sample)
     #modifier_specs = (; zip(modifier_names, m_specs)...)
     
     if haskey(sample.data, :errors)
-        HistFactorySampleSpec(data = convert.(Float64, Vector(sample.data.contents)), errors = Vector(sample.data.errors), modifiers = modifier_specs)
+        HistFactorySampleSpec(data = Float64.(sample.data.contents), errors = Vector(sample.data.errors), modifiers = modifier_specs)
     else
-        HistFactorySampleSpec(data = convert.(Float64, Vector(sample.data.contents)), modifiers = modifier_specs)
+        HistFactorySampleSpec(data = Float64.(sample.data.contents), modifiers = modifier_specs)
     end
 end
 

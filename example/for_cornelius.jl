@@ -6,9 +6,11 @@ using ValueShapes
 using BAT
 
 #init 
-dict = file_to_dict("/ceph/groups/e4/users/cburgard/public/forRobin/higgs/ouput/noES_ind/zz/125.json")
+dict = file_to_dict("path_to_zz")
 specs = HS3.generate_specs(dict)
 analysis = HS3.make_analyses(specs.analyses[5], specs)
+
+
 
 
 prior = HS3.generate_uniform_prior_from_domain(analysis[:parameter_domain])
@@ -21,6 +23,21 @@ prior = delete(NamedTuple(prior), (:obs_x_ATLAS_H_2e2mu_channel_2011_1250_1 , :o
 #set constant values constant
 prior = merge(NamedTupleDist(prior), constant_points)
 #prior = NamedTupleDist(prior)
+
+#test performance
+params = rand(prior)
+@benchmark logdensityof(analysis[:likelihood], params)
+
+
+
+#alternatively I use this to build custom simpler HistFactory models
+dict = file_to_dict("example/simpleHistFact.json")
+specs = HS3.generate_specs(dict)
+analysis = HS3.make_analyses(specs.analyses[1], specs)
+logdensityof(analysis[:likelihood], (mu=1., syst1=0., syst2=0.0, syst3 = 0., lumi = 1., ))
+
+
+
 
 #sort the namedtuple
 function reorder_nt(reference_nt, target_nt::NamedTuple)::NamedTuple

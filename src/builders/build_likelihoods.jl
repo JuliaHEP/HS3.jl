@@ -85,7 +85,7 @@ Generate a likelihood function for a given HistfactPDF distribution and histogra
 A likelihood function.
 """   
 function generate_likelihood(dist::HistfactPDF, data::StatsBase.Histogram)  
-    likelihood = pyhf_loglikelihoodof(dist.channel, convert.(Float64, data.weights))
+    likelihood = pyhf_loglikelihoodof(dist.channel, Float64.(data.weights))
     order = collect(dist.order)
     function ll(params::NamedTuple)::Float64  
         return (likelihood( [params[x] for x in order]))

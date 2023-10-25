@@ -34,7 +34,8 @@
         {
             "name": "main",
             "likelihood": "main_likelihood",
-            "parameters_of_interest": ["mu"]
+            "parameters_of_interest": ["mu"],
+            "domains": ["default_domain"]
         }
     ],
     "likelihoods": [
