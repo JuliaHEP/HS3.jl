@@ -99,10 +99,30 @@ func_data = [
 func_specs = generate_functions_specs(func_data)
 
 """
+
+function create_namedtuple_from_unique(names::Vector{Symbol}, specs)
+    # Create a dictionary to hold the last occurrence of each name-spec pair
+    unique_pairs = Dict{Symbol, Any}()
+
+    for (name, spec) in zip(names, specs)
+        unique_pairs[name] = spec
+    end
+
+    # Convert keys to Tuple{Symbol...} which is required for NamedTuple type parameters
+    #keys_tuple = Tuple{Symbol...}(keys(unique_pairs))
+
+    # Now create the NamedTuple using the unique pairs
+    NamedTupleTools.namedtuple(unique_pairs)
+end
+
+# Usage with your spec_array:
+
 function generate_functions_specs(spec_array::AbstractArray)
     names = [Symbol(func.name) for func in spec_array]
     specs = [parse_and_generate_functionspec(func) for func in spec_array]
-    return (; zip(names, specs)...)
+
+# Create the NamedTuple
+    create_namedtuple_from_unique(names, specs)
     #specs = NamedTuple{}()
     #for func_data in spec_array
     #    name = Symbol(func_data.name)

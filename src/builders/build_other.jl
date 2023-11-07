@@ -16,19 +16,16 @@ domain_specs = (x = ProductDomainSpec(min = 0, max = 1), y = ProductDomainSpec(m
 domain_ranges = make_domain_ranges(domain_specs)
 """
 function make_domain_ranges(domain_specs::NamedTuple)
-    domain = NamedTuple()
-    for (k, v) in zip(keys(domain_specs), domain_specs)
-        domain = merge(domain, (Symbol(k) => LinRange(v.min, v.max, 100),))
-    end
-    domain
+    names = [keys(domain_specs)...]
+    values = [LinRange(v.min, v.max, 100) for v in domain_specs]
+   (; zip(names, values)...) 
 end
 
-
 """
-    generate_uniform_prior_from_domain(domain_specs::NamedTuple)
+    generate_uniform_prior_from_domainspecs(domain_specs::NamedTuple)
 
 Generate a uniform prior distribution from the given domain specifications.
-*This function only exist for testing convenience. It might be removed in the future.*
+*This function only exist for testing convenience. It will be removed in the future.*
 
 # Arguments
 - `domain_specs::NamedTuple`: The domain specifications as a named tuple.
@@ -39,31 +36,26 @@ A `ValueShapes.NamedTupleDist` object representing the uniform prior distributio
 # Example
 ```julia
 domain_specs = (x = (min = 0, max = 1), y = (min = -1, max = 1))
-prior = generate_uniform_prior_from_domain(domain_specs)
+prior = generate_uniform_prior_from_domainspecs(domain_specs)
 
 """
 function generate_uniform_prior_from_domainspecs(domain_specs::NamedTuple)
-    prior = NamedTuple()
-    for (k, v) in zip(keys(domain_specs), domain_specs)
-        prior = merge(prior, (Symbol(k) => (Distributions.Uniform(v.min, v.max)),))
-    end
-    ValueShapes.NamedTupleDist(prior)
+    prior = [(Symbol(k), Distributions.Uniform(Float64((v.min)), Float64((v.max)))) for (k, v) in pairs(domain_specs)]
+    return ValueShapes.NamedTupleDist(NamedTuple(prior))
 end
 
 function generate_uniform_prior_from_domain(domain::NamedTuple)
-    prior = NamedTuple()
-    for (k, v) in zip(keys(domain), domain)
-        prior = merge(prior, (Symbol(k) => (Distributions.Uniform(first(v), last(v))),))
-    end
-    ValueShapes.NamedTupleDist(prior)
+    tasks = [Threads.@spawn begin
+                (Symbol(k), Distributions.Uniform(Float64(first(v)), Float64(last(v))))
+            end for (k, v) in pairs(domain)]
+
+    prior_pairs = fetch.(tasks)
+    return ValueShapes.NamedTupleDist(NamedTuple(prior_pairs))
 end
 
 function generate_ranges_from_domain(domain::NamedTuple)
-    prior = NamedTuple()
-    for (k, v) in zip(keys(domain), domain)
-        prior = merge(prior, (Symbol(k) => ((first(v), last(v))),))
-    end
-    (prior)
+    prior = [(Symbol(k), ((Float64(first(v)), Float64(last(v))))) for (k, v) in pairs(domain)]
+    return NamedTuple(prior)
 end
 """
     make_parameterpoints(pointspecs::NamedTuple)
@@ -84,15 +76,18 @@ julia> make_parameterpoints(pointspecs)
 """
 
 function make_parameterpoints(pointspecs::NamedTuple)
-    nt = NamedTuple()
-    for (k,v) in zip(keys(pointspecs), pointspecs)
-        nt = merge(nt, (k => Float64(v.value),))
-    end
-    nt
+    point_pairs = [(k, Float64(v.value)) for (k, v) in pairs(pointspecs)]
+    return NamedTuple(point_pairs)
 end
 
 
 function make_const_parameterpoints(pointspecs::NamedTuple)
-    const_pairs = [(k, Float64(v.value)) for (k, v) in pairs(pointspecs) if v.isconst]
+
+    tasks = [Threads.@spawn begin
+        (k, Float64(v.value))
+    end for (k, v) in pairs(pointspecs) if v.isconst]
+
+    const_pairs = fetch.(tasks) #[(k, Float64(v.value)) for (k, v) in pairs(pointspecs) if v.isconst]
     return NamedTuple(const_pairs)
 end
+

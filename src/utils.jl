@@ -23,7 +23,7 @@ function _find_variables_in_expression(ex::Expr, vars::Set{Symbol} = Set{Symbol}
             _find_variables_in_expression(arg, vars)
         end
     end
-    return filter(x -> x ∉ [:+, :-, :*, :/], vars)
+    return filter(x -> x ∉ [:+, :-, :*, :/, :exp], vars)
 end
 
 
@@ -92,18 +92,20 @@ struct RelaxedPoisson{T<:Real}  <: Distributions.ContinuousUnivariateDistributio
 end
 # https://github.com/scikit-hep/pyhf/blob/ce7057417ee8c4e845df8302c7375301901d2b7d/src/pyhf/tensor/numpy_backend.py#L390
 @inline function _relaxedpoislogpdf(λ::Float64, x::Float64)::Float64
-    #println(logabsgamma(x + one(x))[1])
     xlogy(x, abs(λ)) - λ - logabsgamma(x + one(x))[1]
 end
 Distributions.logpdf(d::RelaxedPoisson, x) = _relaxedpoislogpdf(d.λ * x,d.λ)
 
 
+
+""" 
+Unnormalised continous Poisson. For testin purposes.
+"""
 struct ContinousPoisson <:Distributions.ContinuousUnivariateDistribution
     λ::Float64 
 end
 
 function continouspoisson_lpdf(x, λ)
-    @info "here" logabsgamma(λ + 1.0) log(λ) x λ  x * log(λ)  - λ x * log(λ)
     x * log(λ)  #- λ #* x#- loggamma(λ + 1.0)#- logabsgamma(x + 1.0)
 end
 Distributions.logpdf(d::ContinousPoisson, x) = continouspoisson_lpdf(x, d.λ)

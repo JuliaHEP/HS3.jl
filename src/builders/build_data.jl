@@ -51,6 +51,17 @@ function make_data(spec::PointDataSpec, domain::NamedTuple)
     spec.value
 end
 
+
+"""
+Struct representing unbinned data 
+with 
+#Arguments
+- entries 
+- entries_errors (optional)
+- axes 
+- weights (optional)
+
+"""
 @with_kw struct UnbinnedData 
     entries::AbstractArray
     entries_errors::Union{AbstractArray, Nothing} = nothing 
@@ -58,8 +69,8 @@ end
     weights::Union{AbstractArray, Nothing} = nothing 
 end
 
+
 function make_data(spec::UnbinnedDataSpec, domain::NamedTuple)
-    println(spec)
     if spec.weights === nothing
         return UnbinnedData(spec.entries, spec.entries_errors, make_axes(spec.axes, domain), ones(length(spec.entries)))
     else
@@ -67,13 +78,19 @@ function make_data(spec::UnbinnedDataSpec, domain::NamedTuple)
     end
 end
 
+"""
+Helper functions to filter out fields with 'nothing' entries 
+"""
 function _filter_nothing(axes_spec::AxesSpec)
     fields = fieldnames(typeof(axes_spec))
     filtered_fields = [(f, getfield(axes_spec, f)) for f in fields if getfield(axes_spec, f) !== nothing]
     return NamedTuple(filtered_fields)
 end
 
-
+"""
+Axes are not always defined completely; this functions takes into account additional information not provided 
+in the axes section of a dataset, but rather in the domains.
+"""
 function make_axes(axes_spec::NamedTuple, domain::NamedTuple)
     fields1 = fieldnames(typeof(axes_spec))
     fields2 = fieldnames(typeof(domain))
@@ -82,7 +99,6 @@ function make_axes(axes_spec::NamedTuple, domain::NamedTuple)
     for f in fields1
         axes_spec_filtered = _filter_nothing(axes_spec[f])
         if f in fields2
-            #println(domain[f], f, axes_spec_filtered)
             merged_fields[f] = merge(axes_spec_filtered, (range = domain[f], ))
         else
             merged_fields[f] = axes_spec_filtered
@@ -93,7 +109,7 @@ function make_axes(axes_spec::NamedTuple, domain::NamedTuple)
 end
 
 """
-    make_datasets(data_specs::NamedTuple)
+    make_datas(data_specs::NamedTuple, domain::NamedTuple)
 
 Create datasets from the given data specifications.
 

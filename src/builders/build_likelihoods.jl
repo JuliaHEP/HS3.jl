@@ -35,6 +35,7 @@ end
 
 function generate_likelihood(dist, data::UnbinnedData)  
     #@info first(data.axes[1].range), last(data.axes[1].range)
+    #println(keys(data.axes)[1])
     likelihood = function (params)
         range_low = first(data.axes[1].range) 
         range_high = last(data.axes[1].range)
@@ -121,34 +122,61 @@ Create a likelihood function based on the given likelihood specification, functi
 A combined likelihood function.
 
 """
+function _process_chunk(distribution_chunk, data_chunk, functional_specs)
+    local_generated_dist = []
+    local_generated_data = []
+    
+    for (dist_name, data_name) in zip(distribution_chunk, data_chunk)
+        @info dist_name
+        dist_sym = Symbol(dist_name)
+        data_sym = Symbol(data_name)
+        funct_spec = functional_specs[dist_sym]
+        
+        if typeof(funct_spec) == HistFactorySpec
+            funct = make_histfact(funct_spec, dist_sym, functional_specs)
+            push!(local_generated_dist, funct)
+        else
+            push!(local_generated_dist, make_functional(funct_spec, sorted_specs))
+        end
+        
+        push!(local_generated_data, make_data(data_specs[data_sym], domain))
+    end
+    
+    return local_generated_dist, local_generated_data
+end
+
+
 function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::NamedTuple, data_specs::NamedTuple, domain::NamedTuple)
     generated_dist = []
     generated_data = []
-    free_parameters = []
-    sorted_specs = topological_sort(functional_specs)
-
+    @info "start topological sort"
+    @info  (likelihood_spec.distributions) 
+    sorted_specs = topological_sort(functional_specs, Set(Symbol.(likelihood_spec.distributions)))
+    @info "end topological_sort"   
     ### making distributions
     if likelihood_spec.distributions !== nothing
         for i in 1:length(likelihood_spec.distributions)
             if typeof(functional_specs[Symbol(likelihood_spec.distributions[i])]) == HistFactorySpec
                 funct = make_histfact(functional_specs[Symbol(likelihood_spec.distributions[i])], Symbol(likelihood_spec.distributions[i]), functional_specs)
-                #free_parameters = push!(free_parameters, collect(keys(funct.prior)))
                 generated_dist = push!(generated_dist, funct)
             else
                 generated_dist = push!(generated_dist, make_functional(functional_specs[Symbol(likelihood_spec.distributions[i])], sorted_specs))
             end
+            # making corresponding data
             generated_data = push!(generated_data, make_data(data_specs[Symbol(likelihood_spec.data[i])], domain))
         end
     end
-
+    @info "dists and data done" 
     likelihood_functions = Function[]
     constraints = (;)
+    #create ll functions
     for i in 1:length(generated_dist)
         likelihood_functions = push!(likelihood_functions, generate_likelihood(generated_dist[i], generated_data[i]))
         if typeof(generated_dist[i]) == HistfactPDF
             constraints = merge(constraints, generated_dist[i].prior)
         end
     end
+    # consider constraint terms as likelihood functions in case of HistFactory distributions
     if constraints != (;)
         likelihood_functions = push!(likelihood_functions, generate_constraints(constraints))
     end
@@ -158,36 +186,10 @@ function make_likelihood(likelihood_spec::LikelihoodSpec, functional_specs::Name
             likelihood_functions = push!(likelihood_functions, generate_likelihood(make_functional(functional_specs[Symbol(aux)], sorted_specs)))
         end
     end
-    #chunks = Iterators.partition(spec_dict, length(keys(spec_dict)) ÷ Threads.nthreads()+1)
-    #tasks = map(chunks) do chunk
-    #    Threads.@spawn _gen_specs(chunk)
-    #end
-    #chunk_sums = fetch.(tasks)
-    #return merge(chunk_sums...)
-    #if length(likelihood_functions) < 5
-    #function log_density(params::NamedTuple)
-    #    # Pre-allocate the results
-    #    n = length(likelihood_functions)
-    #    results = Vector{Float64}(undef, n)
-    #    
-    #    # Compute the log-likelihoods in-place
-    #    for (i, ll_function) in enumerate(likelihood_functions)
-    #        results[i] = ll_function(params)
-    #    end
-    #
-    #    # Sum the results
-    #    return sum(results)
-    #end
     function log_density(params::NamedTuple; likelihood_functions::Vector{Function}=likelihood_functions)
         return sum(ll_function(params) for ll_function in likelihood_functions)
     end
     return DensityInterface.logfuncdensity(log_density)
-    #else 
-    #calc = Base.Fix1(compute_density, likelihood_functions)
-    #return DensityInterface.logfuncdensity(
-    #    params -> calc(params)
-    #)
-    #end
 end
 
 
@@ -206,10 +208,10 @@ Create multiple likelihood functions based on the given specifications, function
 A named tuple of likelihood functions, where the keys correspond to the keys in `specs` and the values are the corresponding likelihood functions.
 
 """
-function make_likelihoods(specs::NamedTuple, functional_specs::NamedTuple, data_specs::NamedTuple)
+function make_likelihoods(specs::NamedTuple, functional_specs::NamedTuple, data_specs::NamedTuple, domain::NamedTuple)
     nt = NamedTuple()
     for (k, v) in zip(keys(specs), specs)
-        nt = merge(nt, (k => make_likelihood(v, functional_specs, data_specs),))
+        nt = merge(nt, (k => make_likelihood(v, functional_specs, data_specs, domain),))
     end
     return nt
 end

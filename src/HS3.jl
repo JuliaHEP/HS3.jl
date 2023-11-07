@@ -3,7 +3,8 @@
 """
     HS3
 
-Template for Julia packages.
+WIP package for HS3 - HEP Statistics Serialization Standard
+    Tests and Docs might be added later.
 """
 
 module HS3
@@ -13,14 +14,11 @@ module HS3
     using LogExpFunctions: xlogy
     using Parameters 
     import Distributions: logpdf, pdf
-    #using Cuba: vegas
     using QuadGK
     abstract type AbstractHS3Spec end
 
     include("read_in.jl")
     include("utils.jl")
-    #include("definitions/CrystalBall.jl")
-    #include("definitions/generic_dist.jl")
 
 
     include("specs/otherspecs.jl")
@@ -45,18 +43,4 @@ module HS3
     include("builders/build_other.jl")
     include("builders/histfactory_utils.jl")
     include("builders/topological_sort.jl")
-
-
-    include("Validator.jl")
-
-    #function _precompile()
-    #    dict = file_to_dict("./example/precompile.json")
-    #    specs = generate_specs(dict)
-    #    #analysis = HS3.make_analyses(specs.analyses[1], specs)
-    #    @info "Precompilation done"
-    #end
-    #_precompile()
-    __precompile__(true)
-    @info "Precompilation done"
-    #include("output/specs_to_dict.jl")
 end 

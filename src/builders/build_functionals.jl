@@ -72,6 +72,7 @@ end
     make_functional(spec, sorted_functionals=[], level=0)
 
 Recursively create a functional representation of the given specification, optionally under consideration of dependencies of other functionals.
+Effectively create function chains, handing down the correct parameters to the corresponding functions.
 
 # Arguments
 - `spec`: The functional specification.
@@ -82,7 +83,7 @@ Recursively create a functional representation of the given specification, optio
 An executeable functional representation of the specification.
 
 """
-### this is bad
+### this needs improvement
 function make_functional(spec::AbstractFunctionalSpec, sorted_functionals::Vector, level::Int64 = 0)
     funct = make_functional(spec)
     return params -> begin
@@ -91,17 +92,7 @@ function make_functional(spec::AbstractFunctionalSpec, sorted_functionals::Vecto
         for funct in reverse(sorted_functionals) 
             functionals = merge(functionals, (first(last(funct)) => make_functional(funct[2][2], sorted_functionals, level+1)(params), ))
         end
-        #println("hereeee: ", functionals)
-        
-        #println(zip((first.(last.(sorted_functionals))), functionals))
         params = merge(params, zip((first.(last.(sorted_functionals))), functionals))
-        #println("bla ", sorted_functionals)
-        #for (k, v) in zip(keys(functionals), functionals)
-        #    println(functionals)
-        #    (typeof(v) <: Number) && break
-        #    functionals = merge(functionals, (k => v(params),))
-        #end
-        #@info (funct, " what ", level, " ", funct(merge(functionals, params)))
         funct((params))
     end
 end

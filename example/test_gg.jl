@@ -1,14 +1,47 @@
+#NOTE: this is an INTERNAL test file for a gamma gamma channel of a Higgs decay and its constituents
+
 using HS3
 using DensityInterface
 using BenchmarkTools
 using CSV
 
 using Distributions
+using DensityInterface
+using ValueShapes
 include("ll_help.jl")
 ##lognormal 
-dict = file_to_dict("./example/test_gg/test_gg_binned_lognormal.json")
+
+dict = file_to_dict("/net/e4-nfs-home.e4.physik.tu-dortmund.de/home/rpelkner/Downloads/ouput/noES_ind/gg/125.json")
+
 specs = HS3.generate_specs(dict)
 
+
+analysis = HS3.make_analyses(specs.analyses[4], specs)
+ 
+
+
+
+prior = HS3.generate_uniform_prior_from_domain(analysis[:parameter_domain])
+constant_points = HS3.make_const_parameterpoints(specs.parameter_points.default_values)
+#all_points = HS3.make_parameterpoints(specs.parameter_points.default_values)
+
+ 
+
+prior = merge((prior), constant_points)
+#prior = NamedTupleDist(prior)
+
+#test performance
+params = rand(prior)
+logdensityof(analysis[:likelihood], params)
+using BenchmarkTools
+@benchmark logdensityof(analysis[:likelihood], params)
+
+atlas_log_kappa_val_mRes_PttEtaConvVBFCat1_gg_2011_exponential_inverted
+
+
+
+dict = file_to_dict("./example/test_gg/test_gg_binned_lognormal.json")
+specs = HS3.generate_specs(dict)
 
 
 analysis = HS3.make_analyses(specs.analyses[1], specs)
@@ -146,7 +179,7 @@ quadgk(x->exp(x * 0.000000000000001), 0, 10)
 
 analysis = HS3.make_analyses(specs.analyses[1], specs)
 
-logdensityof(analysis[:likelihood], (c1 =0.2, c2=0, c3=0, c4=0.0, c5=0,)) 
+logdensityof(analysis[:likelihood], (c1 =1., c2=2., c3=1., c4=1.0, c5=1,)) 
 ex = explore_values([:c1, :c2, :c3, :c4, :c5], (c1 = LinRange(0.0:0.1:10), c2 = LinRange(0.0:0.1:10),c3 = LinRange(0.0:0.1:10),c4 = LinRange(0.0:0.1:10),c5 = LinRange(0.0:0.1:10),), analysis[:likelihood], (c1 = 1, c2=1, c3=1, c4=1, c5=1) )
 ex = explore_values([:c1], (c1 = LinRange(0.0:0.1:10),), analysis[:likelihood], (c1 = 1, c2 =0, c3=0, c4=0, c5=0) )
 write_to_csv(ex, "./example/test_gg/csv/test_gg_unbinned_bernstein.csv")
@@ -162,7 +195,7 @@ specs = HS3.generate_specs(dict)
 
 
 analysis = HS3.make_analyses(specs.analyses[1], specs)
-@benchmark logdensityof(analysis[:likelihood], (mu =1, sigmaL=1, sigmaR=2.,))
+logdensityof(analysis[:likelihood], (mu =1, sigmaL=1, sigmaR=2.,))
 ex = explore_values([:mu, :sigmaL, :sigmaR], (mu = LinRange(0.0:0.1:5), sigmaL=LinRange(0.2:0.1:2), sigmaR=LinRange(0.2:0.1:2)), analysis[:likelihood], (mu = 1., sigmaL=1., sigmaR=1.5,) )
 
 write_to_csv(ex, "./example/test_gg/csv/test_gg_unbinned_split.csv")
@@ -175,10 +208,22 @@ specs = HS3.generate_specs(dict)
 
 
 analysis = HS3.make_analyses(specs.analyses[1], specs)
-logdensityof(analysis[:likelihood], (m0 =1, m1=1, sigma0=1, sigma1=2.,))
-ex = explore_values([:m0, :m1, :sigma0, :sigma1], (m0 = LinRange(0.0:0.1:6), m1 = LinRange(0.0:0.1:6), sigma0=LinRange(0.2:0.1:3), sigma1=LinRange(0.2:0.1:3)), analysis[:likelihood], (m0 = 1., m1=2, sigma0=1., sigma1=1.,) )
+logdensityof(analysis[:likelihood], (m0 =1, m1=2, sigma0=1, sigma1=2.,))
+ex = explore_values([:m0, :m1, :sigma0, :sigma1], (m0 = LinRange(0.0:0.1:6), m1 = LinRange(0.0:0.1:6), sigma0=LinRange(0.2:0.1:3), sigma1=LinRange(0.2:0.1:3)), analysis[:likelihood], (m0 = 1., m1=2, sigma0=1., sigma1=2.,) )
 
 write_to_csv(ex, "./example/test_gg/csv/test_gg_unbinned_product.csv")
+
+#unbinned generic dist
+dict = file_to_dict("./example/test_gg/test_gg_unbinned_generic.json")
+specs = HS3.generate_specs(dict)
+
+
+
+analysis = HS3.make_analyses(specs.analyses[1], specs)
+logdensityof(analysis[:likelihood], (m0 =6,))
+ex = explore_values([:m0], (m0 = LinRange(0.0:0.1:6),), analysis[:likelihood], (m0 = 1.,) )
+
+write_to_csv(ex, "./example/test_gg/csv/test_gg_unbinned_generic.csv")
 
 
 #unbinned mixture model
@@ -193,6 +238,18 @@ ex = explore_values([:m0, :m1, :sigma0, :sigma1, :a0, :a1 ], (m0 = LinRange(0.1:
 
 write_to_csv(ex, "./example/test_gg/csv/test_gg_unbinned_mixture_extended.csv")
 
+
+#unbinned mixture model not extended
+dict = file_to_dict("./example/test_gg/test_gg_unbinned_mixture_not_extended.json")
+specs = HS3.generate_specs(dict)
+
+
+
+analysis = HS3.make_analyses(specs.analyses[1], specs)
+logdensityof(analysis[:likelihood], (m0 =1, m1=2, sigma0=1, sigma1=2., a0 = 0.7,))
+ex = explore_values([:m0, :m1, :sigma0, :sigma1, :a0], (m0 = LinRange(0.1:0.1:6), m1 = LinRange(0.1:0.1:6), sigma0=LinRange(0.2:0.1:3), sigma1=LinRange(0.2:0.1:3), a0=LinRange(0.0:0.01:1), ), analysis[:likelihood], (m0 = 1., m1=2, sigma0=1., sigma1=2., a0 = 0.7,) )
+
+write_to_csv(ex, "./example/test_gg/csv/test_gg_unbinned_mixture_not_extended.csv")
 
 #unbinned argus
 dict = file_to_dict("./example/test_gg/test_gg_unbinned_argus.json")

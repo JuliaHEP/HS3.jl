@@ -6,17 +6,6 @@
 [![Build Status](https://github.com/RobinPelkner/HS3.jl/workflows/CI/badge.svg?branch=main)](https://github.com/RobinPelkner/HS3.jl/actions?query=workflow%3ACI)
 [![Codecov](https://codecov.io/gh/RobinPelkner/HS3.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/RobinPelkner/HS3.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
-This is the WIP implementation of HS3 version 0.2 for Julia. Below is a table of all supported functions and distributions as well as their restrictions. 
-
-
-| HS3 component | Does it work? | Notes  
-| ----------- | ----------- | -----------
-| Normal Dist | yes| -
-| 
-|
-|
-
-## Documentation
-
-* [Documentation for stable version](https://RobinPelkner.github.io/HS3.jl/stable)
-* [Documentation for development version](https://RobinPelkner.github.io/HS3.jl/dev)
+This is the WIP implementation of HS3 version 0.2 for Julia.  
+This is a work in progress!!! Features might change or are removed completely in the future.
+A good starting point can be found in example/histfactory_hl.jl with simple examples.

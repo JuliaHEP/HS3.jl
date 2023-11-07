@@ -185,7 +185,7 @@
             "name": "primary_analysis",
             "likelihood" : "main_likelihood",
             "parameters_of_interest" : ["mu"],
-            "parameter_domain" : "default_domain",
+            "domains" : ["default_domain"],
             "parameter_init": "starting_values"
         }
     ]

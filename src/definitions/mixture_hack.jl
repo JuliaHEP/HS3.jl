@@ -1,22 +1,18 @@
-abstract type MixtureHack <: Distributions.ContinuousUnivariateDistribution end
+"""
+This is a hack introduced for mixture distributions (addition of PDFs); essenetially the same results as with MixtureModel
+    of Distributions.jl can be achieved, but for convenience this hack will be kept in for now.
+"""
 
-
-struct MixtureHackExtended  <: MixtureHack
-    summands::AbstractArray{<:Distributions.ContinuousUnivariateDistribution}
-    coefficients::AbstractArray
-end
-
-struct MixtureHackNotExtended  <: MixtureHack
+struct MixtureHack  <: Distributions.ContinuousUnivariateDistribution
     summands::AbstractArray{<:Distributions.ContinuousUnivariateDistribution}
     coefficients::AbstractArray
 end
 
 function MixtureHack(summands::AbstractArray{<:Distributions.ContinuousUnivariateDistribution}, coefficients::AbstractArray, extended::Bool)
-    extended == true ? MixtureHackExtended(summands, coefficients) : MixtureHackNotExtended(summands, coefficients)
+    extended == true ? MixtureHack(summands, coefficients) : MixtureHack(summands, push!(coefficients, 1 - sum(collect(coefficients))))
 end
 
+pdf(d::MixtureHack, x::Real) =   sum(d.coefficients .* pdf.(d.summands, x))
 
-pdf(d::MixtureHackExtended, x::Real) = 1/sum(d.coefficients) *  sum(d.coefficients .* pdf.(d.summands, x))
 
-
-logpdf(d::MixtureHackExtended, x::Real) = log(pdf(d::MixtureHackExtended, x::Real))
+logpdf(d::MixtureHack, x::Real) = log(pdf(d, x))

@@ -42,6 +42,12 @@ function generate_function(spec::FunctionSpec{:interpolation0d})
     f(spec.params.vars)
 end
 
+"""
+Implementation of the interpolation0d function, as also used in HistFactory. 
+It's depending on an interpolation code, and high, low and nominal values; this is a direct translation of the RooFit code;
+a more 'Julia' like implementation would be good.
+"""
+
 # As defined in https://root.cern.ch/doc/master/EvaluateFuncs_8h_source.html#l00112 and https://root.cern.ch/doc/master/FlexibleInterpVar_8cxx_source.html#l00196
 function interpolation0d!(code, low, high, nominal, paramVal, total)
     if code == 0 
@@ -95,6 +101,12 @@ function interpolation0d!(code, low, high, nominal, paramVal, total)
         @error "InterpolationCode $code not found/supported"
     end
 end
+
+"""
+`_interpolate_sixt_degree` 
+
+support function for interpolation of some sixth degree polynome. Also used for HistFactory interpolation.
+"""
 
 function _interpolate_sixt_degree(x, low, high, nominal, boundary=1.0)
     t = x / boundary;

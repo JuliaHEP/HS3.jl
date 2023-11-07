@@ -1,3 +1,7 @@
+"""
+Simple hack to create products of PDFs. WIP
+"""
+
 struct ProductHack <: Distributions.ContinuousUnivariateDistribution
     factors::AbstractArray{Distributions.ContinuousUnivariateDistribution}
 end

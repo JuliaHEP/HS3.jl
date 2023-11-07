@@ -90,7 +90,7 @@ A named tuple of nodes, key array, and a node info dictionary for all elements i
 function _create_nodes(specs::NamedTuple)
     node_array = []
     key_array = []
-    node_info_dict = Dict{Symbol, NodeInfo}()
+    node_info_dict = Dict{Symbol, Vector{Int64}}()
     for key in keys(specs)
         if typeof(specs[key]) <: AbstractDistributionSpec
             node_array = push!(node_array, _flatten_parameters(values(specs[key].params)))
@@ -102,7 +102,7 @@ function _create_nodes(specs::NamedTuple)
             @error "Spec Type $(typeof(spec)) not supported"
         end
         key_array = push!(key_array, key)
-        node_info_dict[key] = NodeInfo(0, 0)
+        node_info_dict[key] = [0, 0]
     end
     nodes = (; zip(keys(specs), node_array)...)
     return nodes, key_array, node_info_dict
@@ -123,7 +123,7 @@ A sorted array of specifications.
 function _sort_specs(node_info_dict, specs)
     to_sort = []
     for key in keys(node_info_dict)
-        push!(to_sort, Pair(key, node_info_dict[key].layer))
+        push!(to_sort, Pair(key, node_info_dict[key][2]))
     end
     sorted = sort(to_sort, lt=compare_layers)
     sorted_specs = []
@@ -144,40 +144,59 @@ Perform topological sorting on the specifications.
 # Returns
 A sorted array of specifications.
 """
-function topological_sort(specs::NamedTuple)
+function find_all_dependencies(spec_names, nodes)
+    all_deps = Set{Symbol}()
+    to_visit = collect(spec_names)
+    
+    while !isempty(to_visit)
+        current = pop!(to_visit)
+        push!(all_deps, current)
+        for dep in node_deps(current, nodes)
+            if !(dep in all_deps)
+                push!(to_visit, dep)
+            end
+        end
+    end
+    return all_deps
+end
+
+function topological_sort(specs::NamedTuple, selected_specs::Set{Symbol}=Set(keys(specs)))
+    @info "here is topo"
     nodes, key_array, node_info_dict = _create_nodes(specs)
+    @info "topo creation is done"
     ### Visited = 2, Visiting = 1, Unvisited = 0
     while !isempty(key_array)
         node_name = key_array[end]
         deps = node_deps(node_name, nodes)
-        if node_info_dict[node_name].state == 2
+        if node_info_dict[node_name][1] == 2 # THis replaces the NodeInfo structs; 1 is the state; 2 is the layer
             ##already visited 
             pop!(key_array)
         elseif isempty(deps) 
             ## Top level node
-            node_info_dict[node_name].layer = 0
-            node_info_dict[node_name].state = 2
+            node_info_dict[node_name][2] = 0
+            node_info_dict[node_name][1] = 2
             pop!(key_array)
         else 
             allDepsVisited = true
             for dep in deps 
-                if node_info_dict[dep].state == 1
+                if node_info_dict[dep][1] == 1
                     @error("Not a DAG")
-                elseif node_info_dict[dep].state == 0
+                elseif node_info_dict[dep][1] == 0
                     allDepsVisited = false
                     key_array = push!(key_array, dep)
                 end    
             end
             if allDepsVisited == true
-                node_info_dict[node_name].layer = 1 + maximum([node_info_dict[x].layer for x in deps])
-                node_info_dict[node_name].state = 2
+                node_info_dict[node_name][2] = 1 + maximum([node_info_dict[x][2] for x in deps])
+                node_info_dict[node_name][1] = 2
                 pop!(key_array)
-            elseif node_info_dict[node_name].state != 1
-                node_info_dict[node_name].state = 1
+            elseif node_info_dict[node_name][1] != 1
+                node_info_dict[node_name][1] = 1
             else
                 @error("Internal error in topoligical sort")
             end
         end
     end
+    @info "sorting is done"
     return _sort_specs(node_info_dict, specs)
 end

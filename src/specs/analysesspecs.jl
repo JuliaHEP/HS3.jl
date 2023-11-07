@@ -47,14 +47,7 @@ analyses_array = [...]  # Array of analysis data
 specs = generate_analyses_specs(analyses_array)
 """
 function generate_analyses_specs(analyses_array::AbstractArray)
-    #specs = NamedTuple{}()
     names = [Symbol(analysis.name) for analysis in analyses_array]
     specs = [AnalysesSpec(; NamedTuple(filter(entry -> entry[1] != :name, analysis))...) for analysis in analyses_array]
-    #for analysis in analyses_array
-    #    name = Symbol(analysis.name)
-    #    data = NamedTuple(filter(entry -> entry[1] != :name, analysis))
-    #    specs = merge(specs, (name => AnalysesSpec(; data...),),)
-    #end
-    #specs
     return (; zip(names, specs)...)
 end

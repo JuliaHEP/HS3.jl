@@ -1,3 +1,8 @@
+"""
+`_calc_channel_data`:
+Support function needed for 'Staterror' modifier; calculates the complete data and associated error in a channel
+    """  
+
 function _calc_channel_data(samples::NamedTuple)
     data = zero(samples[1].data)
     errors = zero(samples[1].data)
@@ -11,9 +16,14 @@ function _calc_channel_data(samples::NamedTuple)
         end
     end
     @assert length(data) == length(errors)
-    #@info data, sqrt.(errors)
     data, sqrt.(errors)
 end
+
+
+""" 
+`build_channel`
+Main function to create HistFactory typed objects
+    """
 
 function build_channel(histfact_spec, channel_name, function_specs)
     expectedcounts = []
@@ -32,23 +42,29 @@ function build_channel(histfact_spec, channel_name, function_specs)
     expectedcounts, names, constraints, customs
 end
 
+
+"""
+Support function to assess the staterror modifier names; they are depended on bin contents and other.
+    This needs to be included in HS3 documentation!
+    """
 function _assert_modifier_names!(names, modifier, name, channel_name)
     push!(names, name)
 end
 
 function _assert_modifier_names!(names, modifier::Vector{<:Staterror}, name, channel_name)
-    #println(eachindex(modifier))
     channel_name = String(channel_name)
     channel_name = replace(channel_name, "model_" => "")
     for i in eachindex(modifier)
         push!(names, Symbol("gamma_stat_", channel_name, "_bin_$(i-1)")) ##improve this
-        #push!(names, Symbol(mod_name, "_bin$(i-1)"))
     end
-    #println(names)
     return names
-    #sleep(10)
 end
 
+
+"""
+Building function for a single sample; returns a function that represents the expected yield. 
+    Handles the association of modifiers 
+    """ 
 
 function build_sample(sample, function_specs, channel_data, channel_name)
     modifier_arr = []
@@ -59,33 +75,27 @@ function build_sample(sample, function_specs, channel_data, channel_name)
         modifiers = []
         constraints = []
         for m in mod
-            #println(m)
             modifier_i, constraint_i, custom_i = build_modifier(m, name; sample.data, sample.errors, function_specs, channel_data)
-            #println(typeof(modifier_i))
             push!(modifiers, modifier_i)
             push!(constraints, constraint_i)
             push!(customs, custom_i)
             names = _assert_modifier_names!(names, modifier_i, name, channel_name)
-            #println("here, ", names)
         end
         push!(modifier_arr, modifiers)
         push!(constraint_arr, constraints)
         #_push_if_not_nothing!(constraints, )
     end
-    #@info customs
-    #@info modifier_arr
     modifier_arr = any(x->x <: Vector, typeof.(modifier_arr)) ? reduce(vcat,  modifier_arr) : modifier_arr #flatten it
     modifier_arr = any(x->x <: Vector, typeof.(modifier_arr)) ? reduce(vcat,  modifier_arr) : modifier_arr
-    #@info modifier_arr
-    #sleep(20)
     constraint_arr = any(x->x <: Vector, typeof.(constraint_arr)) ?  reduce(vcat, reduce(vcat, constraint_arr)) : constraint_arr
-    #@info constraint_arr
-    #@info length(names), length(modifier_arr), length(constraint_arr)
-    #@assert  length(modifier_arr) == length(constraint_arr)
     customs = filter(x -> x !== nothing, customs)
     ExpCounts(collect(sample.data), names, modifier_arr), names, constraint_arr, customs
 end
 
+"""
+Create constraints for modifiers.
+
+    """
 _make_constraint(::Val{:Gauss}, ::Val{:Histosys}) = Distributions.Normal(0, 1.)
 
 _make_constraint(::Val{:Poisson}, ::Val{:Histosys}) = RelaxedPoisson(1.)
@@ -153,10 +163,8 @@ _parameter_names_from_function(function_spec::FunctionSpec{:generic_function}) =
 _parameter_names_from_function(function_spec::FunctionSpec{:interpolation0d}) = _val_content(collect(function_spec.params.vars))
 
 function _create_constraint_nt(names::Vector{Symbol}, entries::Vector)
-    #@info length(names) entries
     @assert length(names) == length(entries)
     valid_pairs = ((n, e) for (n, e) in zip(names, entries) if e !== nothing)
-    #@info NamedTuple(Dict(valid_pairs))
     return NamedTuple(Dict(valid_pairs))
 end
 
@@ -172,72 +180,15 @@ function _extract_pairs(arr, pairs=[])
 end
 
 function _create_expected(channel)
-    #all_expcounts = ExpCounts[]
-    #all_names = Symbol[]
     constraint_arr = []
-    #println((channel))
-    #sleep(10)
     (expcounts, all_names, constraints, customs) = channel
-
-    #println(expcounts)
-    #sleep(10)
-    #all_expcounts = Tuple(all_expcounts)
-    #all_v_names = Any[E.modifier_names for E in all_expcounts]
-    #all_names = reduce(vcat, all_v_names)
-    #channel_unique = unique(all_names)
-    #all_modifiers = []
-    #for E in expcounts
-    #    #println("here   ", E)
-    #    append!(all_modifiers, E.modifiers)
-    #end
-    #@info all_modifiers
-    #@info expcounts
-    #all_unique_names = unique!(reduce(vcat, all_names))
-    #@info all_unique_names
-    #println(all_unique_names)
     constraints = _create_constraint_nt(reduce(vcat, all_names), reduce(vcat, constraints))
-    #@info constraints
-    #lookup = Dict(all_names .=> all_modifiers)
-    #println("here", length(lookup))
-    # Special case: same name can appear multiple times with different modifier type
-    # if masks[1] == [1,2,4] that means the first `ExpCounts(αs[[1,2,4]])`
-    #cust = Dict((customs...))
-    #@info "here" (customs)
     custom_pairs = _extract_pairs(customs)
     custom_dict = Dict(custom_pairs)
-    #@info custom_dict
-    #@info all_names
-    #for name in all_names
-    #    for elem in name
-    #        @info get(custom_dict, elem, elem)
-    #    end
-    #end
-    #@info all_names
     all_modified_names = [ [get(custom_dict, elem, elem) for elem in names] for names in all_names]
     all_unique_names = unique!(reduce(vcat, reduce(vcat, all_modified_names)))
-    #@info all_modified_names
     masks = Tuple([(typeof(i) == Symbol ? findfirst(==(i), all_unique_names) : [findfirst(==(j), all_unique_names) for j in i]) for i in names] for names in all_modified_names)
-    #masks = Tuple(
-    #begin
-    #    mask = [findfirst(==(i), all_unique_names) for i in names]
-    #    for i in names
-    #        # Check if name i exists in any sublist of special_names_list
-    #        for sublist in customs
-    #            if i in sublist
-    #                append!(mask, [findfirst(==(j), all_unique_names) for j in sublist])
-    #            end
-    #        end
-    #    end
-    #    mask
-    #end for names in all_names
-#)
-    #@info masks
-    #println(masks)    
-    #println(masks)
-    #println("aaaaa", Tuple(expcounts)[3], " stop")
     expected = (αs) -> internal_expected(Tuple(expcounts), masks, αs)
-    #global expected_arr = expected
-    #println(masks)
     return expected, all_unique_names, constraints
 end
 
@@ -251,17 +202,9 @@ ExpCounts(nominal::Vector{Float64}, names::Vector{Symbol}, modifiers::AbstractVe
 
 (E::ExpCounts)(αs::AbstractArray) =_expkernel(E.modifiers, E.nominal, αs)
 
-
-#@unroll function _expkernel(modifiers, nominal::Vector{Float64}, αs)
-#    additive = zeros(Float64, length(nominal))
-#    factor = ones(Float64, length(nominal))
-#    for i in eachindex(modifiers)
-#        #typeof(modifier[i]) <:  
-#        @inbounds exp_mod!(modifiers[i].interp, additive, factor, αs[i])
-#    end
-# 
-#    return factor .* (additive .+  nominal)
-#end
+"""
+Calculate the actual expectation
+"""
 @generated function _expkernel(modifiers::Tuple{Vararg{Any, N}}, nominal::Vector{Float64}, αs::AbstractArray) where N
     code = quote
         additive = zeros(Float64, length(nominal))
@@ -316,7 +259,6 @@ end
 #end
 
 function exp_mod!(interp::CustomInterpolation, additive::Vector{Float64}, factor::Vector{Float64}, α::Vector{Float64})
-    #@info "hereee"
     factor .*= interp(α)
     return
 end
@@ -339,13 +281,11 @@ end
 @generated function internal_constrainteval(pris::Tuple, αs::Vector{Float64})::Float64
     #@assert pris <: Tuple
     @views expand(i) = i == 1 ? :(logpdf(pris[1], αs[1])) : :(+(logpdf(pris[$i], αs[$i]), $(expand(i-1))))
-    #println(length(pris.parameters))
     return expand(length(pris.parameters))
 end
 
 function pyhf_logpriorof(priors)
     pris = values(priors)
-    #println("eh", length(pris))
     function (αs)
         #@assert length(αs) == length(pris)
         internal_constrainteval(pris, αs)

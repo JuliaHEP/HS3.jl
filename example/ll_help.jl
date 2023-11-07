@@ -1,3 +1,4 @@
+# INTERNAL helper function for developement.
 using CSV 
 function write_to_csv(nt::NamedTuple, filename::String)
     # Create an array to collect rows for the CSV

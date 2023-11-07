@@ -101,7 +101,6 @@ Base.getindex(b::MultOneHot{T}, n::Integer) where T = Base.ifelse(n==b.nthbin, b
 Base.size(b::MultOneHot) = (b.nbins, )
 
 function binidentity(nbins, nthbin, moddata)
-    #if moddata != 0
     α -> MultOneHot(nbins, nthbin, α)
 end
 
@@ -119,11 +118,7 @@ CustomMod(expression::Function, vars::Vector{Symbol}) = CustomMod(CustomInterpol
 
 
 function (i::CustomInterpolation)(α::Vector{Float64})
-    #println(α)
-    #println(i.variables)
     nt = NamedTuple{Tuple(i.variables)}((α))
-    #@info @elapsed i.funct(nt)
-    #sleep(3)
     return i.funct(nt)
 end
 
