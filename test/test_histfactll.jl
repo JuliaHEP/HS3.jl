@@ -1,7 +1,6 @@
 # This file is a part of HS3.jl, licensed under the MIT License (MIT).
 using HS3
 using Test
-using LiteHF
 using DensityInterface
 using LiteHF
 
