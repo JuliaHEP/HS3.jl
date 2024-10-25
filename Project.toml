@@ -33,6 +33,7 @@ url = "https://github.com/JuliaHEP/LiteHF.jl/"
 
 [compat]
 BAT = "3"
+BenchmarkTools = "1"
 CSV = "0.10"
 JSON3 = "1"
 LiteHF = "0.1.0"
